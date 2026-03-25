@@ -38,3 +38,19 @@ out/
 
 ### Kotlin ###
 .kotlin
+
+# Gradle
+.gradle/
+
+# IntelliJ
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment
+.env

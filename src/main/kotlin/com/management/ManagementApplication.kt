@@ -1,4 +1,4 @@
-package com.examplemanagement
+package com.management
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
