@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="fragments/head :: commonHead('Dashboard')"></head>
+
+<body>
+<h2>Dashboard</h2>
+
+<p>You are logged in 🎉</p>
+
+<p sec:authorize="hasRole('ADMIN')"><a href="/admin/passwords">Admin: Manage password entries</a></p>
+<p sec:authorize="hasRole('ADMIN')"><a href="/admin/users">Admin: Manage users and roles</a></p>
+<p sec:authorize="hasAnyRole('MANAGER', 'ADMIN')"><a href="/manager/dashboard">Manager dashboard</a></p>
+<p><a href="/my/passwords">My assigned passwords</a></p>
+
+<a href="/logout">Logout</a>
+
+</body>
+</html>

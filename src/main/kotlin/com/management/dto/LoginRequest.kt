@@ -1,7 +1,6 @@
 package com.management.dto
 
-data class RegisterRequest(
-    val username: String,
+data class LoginRequest(
     val email: String,
     val password: String
 )

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/head :: commonHead('Admin User Management')"></head>
+<body>
+<h2>Admin User Management</h2>
+
+<table border="1" cellpadding="8">
+    <thead>
+    <tr>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Current Role</th>
+        <th>Change Role</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="user : ${users}">
+        <td th:text="${user.username}">username</td>
+        <td th:text="${user.email}">email</td>
+        <td th:text="${user.role != null ? user.role.name : 'USER'}">USER</td>
+        <td>
+            <form method="post" th:action="@{'/admin/users/' + ${user.id} + '/role'}">
+                <select name="roleName">
+                    <option th:each="role : ${roles}"
+                            th:value="${role.name}"
+                            th:text="${role.name}"
+                            th:selected="${user.role != null and user.role.name == role.name}">
+                    </option>
+                </select>
+                <button type="submit">Update</button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<p><a href="/admin/passwords">Back to password entries</a></p>
+<p><a href="/dashboard">Back to dashboard</a></p>
+</body>
+</html>

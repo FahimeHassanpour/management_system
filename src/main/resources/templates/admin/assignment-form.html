@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/head :: commonHead('Assign Password Entry')"></head>
+<body>
+<h2>Assign Users</h2>
+<p>
+    Entry:
+    <strong th:text="${entry.title}">Entry title</strong>
+</p>
+
+<table border="1" cellpadding="8">
+    <thead>
+    <tr>
+        <th>Username</th>
+        <th>Email</th>
+        <th>Assigned</th>
+        <th>Action</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="user : ${users}">
+        <td th:text="${user.username}">username</td>
+        <td th:text="${user.email}">email</td>
+        <td th:text="${assignedUserIds.contains(user.id)} ? 'Yes' : 'No'">No</td>
+        <td>
+            <form th:if="${!assignedUserIds.contains(user.id)}" method="post" th:action="@{'/admin/passwords/' + ${entry.id} + '/assignments'}">
+                <input type="hidden" name="userId" th:value="${user.id}"/>
+                <button type="submit">Assign</button>
+            </form>
+            <form th:if="${assignedUserIds.contains(user.id)}" method="post" th:action="@{'/admin/passwords/' + ${entry.id} + '/assignments/remove'}">
+                <input type="hidden" name="userId" th:value="${user.id}"/>
+                <button type="submit">Remove</button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<p><a href="/admin/passwords">Back to entries</a></p>
+</body>
+</html>
