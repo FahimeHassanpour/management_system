@@ -4,7 +4,6 @@ import com.management.models.Role
 import com.management.models.User
 import com.management.repositories.RoleRepository
 import com.management.repositories.UserRepository
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.CommandLineRunner
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -14,17 +13,15 @@ import org.springframework.security.crypto.password.PasswordEncoder
 class AdminBootstrapConfig {
 
     @Bean
-    fun bootstrapAdminUser(
+    fun bootstrapFixedAdmin(
         userRepository: UserRepository,
         roleRepository: RoleRepository,
-        passwordEncoder: PasswordEncoder,
-        @Value("\${app.bootstrap-admin.enabled:true}") enabled: Boolean,
-        @Value("\${app.bootstrap-admin.username:admin}") adminUsername: String,
-        @Value("\${app.bootstrap-admin.email:admin@local}") adminEmail: String,
-        @Value("\${app.bootstrap-admin.password:admin123}") adminPassword: String
+        passwordEncoder: PasswordEncoder
     ): CommandLineRunner {
         return CommandLineRunner {
-            if (!enabled) return@CommandLineRunner
+            val adminUsername = "admin"
+            val adminEmail = "admin@local"
+            val adminPassword = "admin123"
 
             val adminRole = roleRepository.findByName("ADMIN")
                 .orElseGet { roleRepository.save(Role(name = "ADMIN")) }
@@ -38,10 +35,10 @@ class AdminBootstrapConfig {
                 )
             }
 
-            // Keep admin bootstrap predictable for local development.
             adminUser.email = adminEmail
-            adminUser.password = passwordEncoder.encode(adminPassword)
-                ?: throw RuntimeException("Admin password encoding failed")
+            val encoded = passwordEncoder.encode(adminPassword)
+                ?: throw RuntimeException("Failed to encode admin password")
+            adminUser.password = encoded
             adminUser.role = adminRole
             userRepository.save(adminUser)
         }

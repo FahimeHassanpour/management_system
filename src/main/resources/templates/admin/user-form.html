@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments/head :: commonHead('Create User')"></head>
+<body>
+<h2>Create / Invite User</h2>
+
+<form action="/admin/users" method="post">
+    <label>Username</label><br/>
+    <input type="text" name="username" required/><br/><br/>
+
+    <label>Email</label><br/>
+    <input type="email" name="email" required/><br/><br/>
+
+    <label>Temporary Password</label><br/>
+    <input type="text" name="password" required/><br/><br/>
+
+    <label>Role</label><br/>
+    <select name="roleName">
+        <option th:each="role : ${roles}"
+                th:value="${role.name}"
+                th:text="${role.name}">
+        </option>
+    </select><br/><br/>
+
+    <button type="submit">Create</button>
+    <a href="/admin/users">Cancel</a>
+</form>
+
+</body>
+</html>

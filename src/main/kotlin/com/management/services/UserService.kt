@@ -24,7 +24,7 @@ class UserService(
             throw RuntimeException("Email already exists")
         }
 
-        // get default role USER (create it if missing to keep registration working)
+        // for invited members: always start as USER by default
         val role = roleRepository.findByName("USER")
             .orElseGet { roleRepository.save(Role(name = "USER")) }
 

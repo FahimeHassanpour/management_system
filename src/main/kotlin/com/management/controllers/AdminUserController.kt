@@ -23,12 +23,39 @@ class AdminUserController(
         return "admin/user-management"
     }
 
+    @GetMapping("/new")
+    fun newUserForm(model: Model): String {
+        model.addAttribute("roles", adminUserService.listRoles())
+        return "admin/user-form"
+    }
+
+    @PostMapping
+    fun createUser(
+        @RequestParam username: String,
+        @RequestParam email: String,
+        @RequestParam password: String,
+        @RequestParam roleName: String
+    ): String {
+        adminUserService.createUser(username, email, password, roleName)
+        return "redirect:/admin/users"
+    }
+
     @PostMapping("/{userId}/role")
     fun updateRole(
         @PathVariable userId: Long,
         @RequestParam roleName: String
     ): String {
         adminUserService.updateUserRole(userId, roleName)
+        return "redirect:/admin/users"
+    }
+
+    @PostMapping("/{userId}/info")
+    fun updateUserInfo(
+        @PathVariable userId: Long,
+        @RequestParam username: String,
+        @RequestParam email: String
+    ): String {
+        adminUserService.updateUserInfo(userId, username, email)
         return "redirect:/admin/users"
     }
 }
