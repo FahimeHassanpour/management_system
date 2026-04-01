@@ -1,19 +1,19 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="fragments/head :: commonHead('Admin User Management')"></head>
+<head th:replace="fragments/head :: commonHead(#{admin.users.title})"></head>
 <body>
-<h2>Admin User Management</h2>
+<h2 th:text="#{admin.users.title}">Admin User Management</h2>
 
-<p><a href="/admin/users/new">Invite / Create new user</a></p>
+<p><a href="/admin/users/new" th:text="#{admin.users.invite}">Invite / Create new user</a></p>
 
 <table border="1" cellpadding="8">
     <thead>
     <tr>
-        <th>Username</th>
-        <th>Email</th>
-        <th>Current Role</th>
-        <th>Edit Info</th>
-        <th>Change Role</th>
+        <th th:text="#{admin.users.username}">Username</th>
+        <th th:text="#{admin.users.email}">Email</th>
+        <th th:text="#{admin.users.role}">Current Role</th>
+        <th th:text="#{admin.users.editInfo}">Edit Info</th>
+        <th th:text="#{admin.users.changeRole}">Change Role</th>
     </tr>
     </thead>
     <tbody>

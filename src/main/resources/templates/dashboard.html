@@ -1,18 +1,71 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
-<head th:replace="fragments/head :: commonHead('Dashboard')"></head>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 
-<body>
-<h2>Dashboard</h2>
+<head th:replace="fragments/head :: commonHead(#{dashboard.title})"></head>
 
-<p>You are logged in 🎉</p>
+<body class="dashboard-body">
 
-<p sec:authorize="hasRole('ADMIN')"><a href="/admin/passwords">Admin: Manage password entries</a></p>
-<p sec:authorize="hasRole('ADMIN')"><a href="/admin/users">Admin: Manage users and roles</a></p>
-<p sec:authorize="hasAnyRole('MANAGER', 'ADMIN')"><a href="/manager/dashboard">Manager dashboard</a></p>
-<p><a href="/my/passwords">My assigned passwords</a></p>
+<div class="dashboard-container">
+    <header class="dashboard-header">
+        <h1 th:text="#{dashboard.title}">Dashboard</h1>
+        <p th:text="${#messages.msg('dashboard.welcome', {#authentication.name})}">
+            Welcome, user
+        </p>
+    </header>
 
-<a href="/logout">Logout</a>
+    <section class="dashboard-grid">
+        <!-- User: My passwords -->
+        <article class="card">
+            <h2 th:text="#{dashboard.card.myPasswords.title}">My assigned passwords</h2>
+            <p th:text="#{dashboard.card.myPasswords.desc}">
+                View and search passwords that have been assigned to you.
+            </p>
+            <a href="/my/passwords"
+               class="card-link"
+               th:text="#{dashboard.card.myPasswords.link}">Open</a>
+        </article>
+
+        <!-- Admin-only cards -->
+        <article class="card" sec:authorize="hasRole('ADMIN')">
+            <h2 th:text="#{dashboard.card.adminPasswords.title}">Manage password entries</h2>
+            <p th:text="#{dashboard.card.adminPasswords.desc}">
+                Create, edit, categorize, and assign passwords.
+            </p>
+            <a href="/admin/passwords"
+               class="card-link"
+               th:text="#{dashboard.card.adminPasswords.link}">Go to admin passwords</a>
+        </article>
+
+        <article class="card" sec:authorize="hasRole('ADMIN')">
+            <h2 th:text="#{dashboard.card.adminUsers.title}">Manage users &amp; roles</h2>
+            <p th:text="#{dashboard.card.adminUsers.desc}">
+                Invite members and control their access levels.
+            </p>
+            <a href="/admin/users"
+               class="card-link"
+               th:text="#{dashboard.card.adminUsers.link}">Go to user management</a>
+        </article>
+
+        <!-- Manager and admin -->
+        <article class="card" sec:authorize="hasAnyRole('MANAGER','ADMIN')">
+            <h2 th:text="#{dashboard.card.manager.title}">Manager dashboard</h2>
+            <p th:text="#{dashboard.card.manager.desc}">
+                See high-level access and activity overview.
+            </p>
+            <a href="/manager/dashboard"
+               class="card-link"
+               th:text="#{dashboard.card.manager.link}">Open manager view</a>
+        </article>
+    </section>
+
+    <footer class="dashboard-footer">
+        <a href="/logout" class="btn-logout">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            <span th:text="#{dashboard.logout}">Logout</span>
+        </a>
+    </footer>
+</div>
 
 </body>
 </html>
