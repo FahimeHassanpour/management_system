@@ -22,29 +22,6 @@ class AdminUserService(
 
     fun listRoles(): List<Role> = roleRepository.findAll().sortedBy { it.name.uppercase() }
 
-    fun createUser(username: String, email: String, rawPassword: String, roleName: String): User {
-        if (userRepository.findByUsername(username).isPresent) {
-            throw RuntimeException(msg("error.username.exists"))
-        }
-        if (userRepository.findByEmail(email).isPresent) {
-            throw RuntimeException(msg("error.email.exists"))
-        }
-
-        val normalizedRole = roleName.trim().uppercase()
-        val role = roleRepository.findByName(normalizedRole)
-            .orElseGet { roleRepository.save(Role(name = normalizedRole)) }
-
-        val encodedPassword = passwordEncoder.encode(rawPassword)
-            ?: throw RuntimeException(msg("error.user.password.encode"))
-        val user = User(
-            username = username.trim(),
-            email = email.trim(),
-            password = encodedPassword,
-            role = role
-        )
-        return userRepository.save(user)
-    }
-
     fun updateUserInfo(userId: Long, username: String, email: String) {
         val user = userRepository.findById(userId)
             .orElseThrow { RuntimeException(msg("error.user.notfound")) }

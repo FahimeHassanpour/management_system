@@ -25,6 +25,7 @@ class SecurityConfig {
             .csrf { it.disable() }
             .authorizeHttpRequests {
                 it.requestMatchers("/login").permitAll()
+                it.requestMatchers("/register").permitAll()
                 it.requestMatchers("/admin/**").hasRole("ADMIN")
                 it.requestMatchers("/manager/**").hasAnyRole("MANAGER", "ADMIN")
                 it.anyRequest().authenticated()
@@ -44,11 +45,11 @@ class SecurityConfig {
 
         return http.build()
     }
+
     @Bean
     fun authenticationManager(
         authenticationConfiguration: AuthenticationConfiguration
     ): AuthenticationManager {
         return authenticationConfiguration.authenticationManager
     }
-
 }

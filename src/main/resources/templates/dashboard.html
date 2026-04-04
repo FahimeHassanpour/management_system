@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      class="wa-dark">
 
 <head th:replace="fragments/head :: commonHead(#{dashboard.title})"></head>
 
@@ -45,6 +46,17 @@
             <a href="/admin/users"
                class="card-link"
                th:text="#{dashboard.card.adminUsers.link}">Go to user management</a>
+        </article>
+
+        <article class="card" sec:authorize="hasRole('ADMIN')">
+            <h2 th:text="#{dashboard.card.adminInvite.title}">Invite users</h2>
+            <p th:text="#{dashboard.card.adminInvite.desc}">
+                Send an email invitation so someone can register.
+            </p>
+            <a href="/admin/invitations"
+               class="card-link"
+               th:href="@{/admin/invitations}"
+               th:text="#{dashboard.card.adminInvite.link}">Invite user</a>
         </article>
 
         <!-- Manager and admin -->
