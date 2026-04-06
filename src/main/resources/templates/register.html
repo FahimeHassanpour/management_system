@@ -3,16 +3,95 @@
 <head th:replace="fragments/head :: commonHead('Register')"></head>
 <body>
 <h2>Complete registration</h2>
+
 <p th:if="${error}" th:text="${error}" style="color: red;"></p>
+
 <form th:action="@{/register}" method="post">
     <input type="hidden" name="token" th:value="${token}"/>
+
     <input type="email" name="email" th:value="${email}" readonly required/>
     <br/>
+
     <input type="text" name="username" placeholder="Username" required/>
     <br/>
-    <input type="password" name="password" placeholder="Password" required/>
+
+    <input
+            id="password"
+            type="password"
+            name="password"
+            placeholder="Password"
+            required
+            minlength="8"
+            pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}"
+            title="At least 8 characters, including uppercase, lowercase, number, and symbol."/>
     <br/>
+
+    <ul id="password-rules" style="list-style:none; padding-left:0; font-size:0.9rem; margin:8px 0 12px;">
+        <li id="rule-len">At least 8 characters</li>
+        <li id="rule-lower">One lowercase letter</li>
+        <li id="rule-upper">One uppercase letter</li>
+        <li id="rule-digit">One number</li>
+        <li id="rule-symbol">One symbol</li>
+    </ul>
+
+    <p id="password-error" style="color:red; display:none; margin-top:0;">
+        Password does not meet all requirements.
+    </p>
+
     <button type="submit">Register</button>
 </form>
+
+<script>
+    (function () {
+        const passwordInput = document.getElementById('password');
+        if (!passwordInput) return;
+
+        const rules = {
+            len: document.getElementById('rule-len'),
+            lower: document.getElementById('rule-lower'),
+            upper: document.getElementById('rule-upper'),
+            digit: document.getElementById('rule-digit'),
+            symbol: document.getElementById('rule-symbol')
+        };
+        const error = document.getElementById('password-error');
+        const form = passwordInput.closest('form');
+
+        function paint(el, ok) {
+            if (!el) return;
+            el.style.color = ok ? 'green' : '';
+            el.style.fontWeight = ok ? '600' : '400';
+        }
+
+        function validate(value) {
+            const okLen = value.length >= 8;
+            const okLower = /[a-z]/.test(value);
+            const okUpper = /[A-Z]/.test(value);
+            const okDigit = /\d/.test(value);
+            const okSymbol = /[^\w\s]/.test(value);
+
+            paint(rules.len, okLen);
+            paint(rules.lower, okLower);
+            paint(rules.upper, okUpper);
+            paint(rules.digit, okDigit);
+            paint(rules.symbol, okSymbol);
+
+            return okLen && okLower && okUpper && okDigit && okSymbol;
+        }
+
+        passwordInput.addEventListener('input', function () {
+            validate(passwordInput.value);
+            if (error) error.style.display = 'none';
+        });
+
+        form.addEventListener('submit', function (e) {
+            if (!validate(passwordInput.value)) {
+                e.preventDefault();
+                if (error) error.style.display = 'block';
+            }
+        });
+
+        validate(passwordInput.value || '');
+    })();
+</script>
 </body>
 </html>

@@ -17,7 +17,6 @@
           crossorigin="anonymous">
     <script src="https://kit.webawesome.com/a317929e80b2446d.js" crossorigin="anonymous"></script>
     <style>
-        /* Colors only via Web Awesome tokens (use class="wa-dark" on <html>). */
 
         body.login-body {
             margin: 0;
@@ -226,6 +225,58 @@
 
         .btn-logout:hover {
             background: var(--wa-color-danger-fill-normal);
+        }
+
+        .invite-card {
+            max-width: 28rem;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .invite-card .login-form {
+            margin-top: var(--wa-space-xs);
+        }
+
+        .invite-card .form-group {
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
+            width: 100%;
+        }
+
+        .invite-card .form-group input[type="email"] {
+            width: 100%;
+            max-width: 100%;
+            min-width: 0;
+            box-sizing: border-box;
+        }
+
+        .invite-back {
+            margin: var(--wa-space-l) 0 0;
+            font-size: var(--wa-font-size-s);
+        }
+
+        .invite-back a {
+            color: var(--wa-color-text-link);
+            text-decoration: none;
+            font-weight: var(--wa-font-weight-semibold);
+        }
+
+        .invite-back a:hover {
+            text-decoration: underline;
+        }
+
+        .invite-page .dashboard-header {
+            text-align: center;
+        }
+
+        .invite-title,
+        .invite-subtitle {
+            text-align: center;
+        }
+
+        .invite-subtitle {
+            text-align: center;
         }
     </style>
 </head>

@@ -13,15 +13,20 @@ class RegistrationController(
     private val invitationService: InvitationService,
     private val userService: UserService
 ) {
+
+    private val strongPasswordRegex =
+        Regex("^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[^\\w\\s]).{8,}$")
+
     @GetMapping("/register")
     fun show(@RequestParam token: String, model: Model): String {
-        val inv = invitationService.findValidByToken(token)
-        if (inv == null) {
+        val invitation = invitationService.findValidByToken(token)
+        if (invitation == null) {
             model.addAttribute("error", "Invalid or expired invitation.")
             return "register-error"
         }
+
         model.addAttribute("token", token)
-        model.addAttribute("email", inv.email)
+        model.addAttribute("email", invitation.email)
         return "register"
     }
 
@@ -33,25 +38,38 @@ class RegistrationController(
         @RequestParam password: String,
         model: Model
     ): String {
-        val inv = invitationService.findValidByToken(token)
-        if (inv == null) {
+        val invitation = invitationService.findValidByToken(token)
+        if (invitation == null) {
             model.addAttribute("error", "Invalid or expired invitation.")
             return "register-error"
         }
-        if (!email.trim().equals(inv.email, ignoreCase = true)) {
+
+        val normalizedEmail = email.trim()
+        if (!normalizedEmail.equals(invitation.email, ignoreCase = true)) {
             model.addAttribute("error", "Email must match the invitation.")
             model.addAttribute("token", token)
-            model.addAttribute("email", inv.email)
+            model.addAttribute("email", invitation.email)
             return "register"
         }
+
+        if (!strongPasswordRegex.matches(password)) {
+            model.addAttribute(
+                "error",
+                "Password must be at least 8 characters and include uppercase, lowercase, number, and symbol."
+            )
+            model.addAttribute("token", token)
+            model.addAttribute("email", invitation.email)
+            return "register"
+        }
+
         return try {
-            userService.register(username.trim(), email.trim(), password)
-            invitationService.markUsed(inv)
+            userService.register(username.trim(), normalizedEmail, password)
+            invitationService.markUsed(invitation)
             "redirect:/login?registered"
         } catch (e: Exception) {
             model.addAttribute("error", e.message ?: "Registration failed")
             model.addAttribute("token", token)
-            model.addAttribute("email", inv.email)
+            model.addAttribute("email", invitation.email)
             "register"
         }
     }

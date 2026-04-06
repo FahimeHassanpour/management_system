@@ -1,13 +1,44 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" class="wa-dark">
-<head th:replace="fragments/head :: commonHead('Invite user')"></head>
+<head th:replace="fragments/head :: commonHead(#{admin.invite.pageTitle})"></head>
 <body class="dashboard-body">
-<h1>Invite by email</h1>
-<p th:if="${param.sent}" style="color: green;">Invitation sent.</p>
-<form method="post" th:action="@{/admin/invitations}">
-    <label>Email <input type="email" name="email" required /></label>
-    <button type="submit">Send invitation</button>
-</form>
-<p><a th:href="@{/admin/users}">Back to users</a></p>
+
+<div class="dashboard-container">
+    <header class="dashboard-header">
+        <h1 class="invite-title">Invite a user</h1>
+        <p class="invite-subtitle">We will send them an email with a one-time link to register.</p>
+    </header>
+
+    <article class="card invite-card">
+        <div th:if="${param.sent}" class="alert alert-success">
+            <i class="fa-solid fa-circle-check"></i>
+            <span th:text="#{admin.invite.success}">Invitation sent.</span>
+        </div>
+
+        <form method="post" th:action="@{/admin/invitations}" class="login-form" autocomplete="off">
+            <div class="form-group">
+                <label for="invite-email">
+                    <i class="fa-solid fa-envelope"></i>
+                    <span th:text="#{admin.invite.emailLabel}">Email address</span>
+                </label>
+                <input id="invite-email"
+                       name="email"
+                       type="email"
+                       required
+                       th:attr="placeholder=#{admin.invite.placeholder}"
+                       autocomplete="email"/>
+            </div>
+            <button type="submit" class="btn-primary">
+                <i class="fa-solid fa-paper-plane"></i>
+                <span th:text="#{admin.invite.submit}">Send invitation</span>
+            </button>
+        </form>
+
+        <p class="invite-back">
+            <a th:href="@{/admin/users}" th:text="#{admin.invite.back}">Back to user management</a>
+        </p>
+    </article>
+</div>
+
 </body>
 </html>
