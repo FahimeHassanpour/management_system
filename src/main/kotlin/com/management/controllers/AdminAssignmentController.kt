@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RequestParam
 
 @Controller
 @RequestMapping("/admin/passwords/{passwordEntryId}/assignments")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
 class AdminAssignmentController(
     private val assignmentService: AssignmentService,
     private val passwordEntryRepository: PasswordEntryRepository,

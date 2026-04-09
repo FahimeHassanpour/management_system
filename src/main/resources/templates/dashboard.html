@@ -16,7 +16,6 @@
     </header>
 
     <section class="dashboard-grid">
-        <!-- User: My passwords -->
         <article class="card">
             <h2 th:text="#{dashboard.card.myPasswords.title}">My assigned passwords</h2>
             <p th:text="#{dashboard.card.myPasswords.desc}">
@@ -27,8 +26,7 @@
                th:text="#{dashboard.card.myPasswords.link}">Open</a>
         </article>
 
-        <!-- Admin-only cards -->
-        <article class="card" sec:authorize="hasRole('ADMIN')">
+        <article class="card" sec:authorize="hasAnyRole('MANAGER','ADMIN')">
             <h2 th:text="#{dashboard.card.adminPasswords.title}">Manage password entries</h2>
             <p th:text="#{dashboard.card.adminPasswords.desc}">
                 Create, edit, categorize, and assign passwords.

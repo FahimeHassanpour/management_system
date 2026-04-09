@@ -1,10 +1,14 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" class="wa-dark">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      class="wa-dark">
 <head th:replace="fragments/head :: commonHead(#{admin.users.title})"></head>
 <body>
 <h2 th:text="#{admin.users.title}">Admin User Management</h2>
 
-<p><a th:href="@{/admin/invitations}" th:text="#{admin.users.invite}">Invite user</a></p>
+<p sec:authorize="hasRole('ADMIN')">
+    <a th:href="@{/admin/invitations}" th:text="#{admin.users.invite}">Invite user</a>
+</p>
 
 <table border="1" cellpadding="8">
     <thead>

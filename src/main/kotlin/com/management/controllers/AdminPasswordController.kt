@@ -16,13 +16,13 @@ import org.springframework.web.bind.annotation.RequestParam
 
 @Controller
 @RequestMapping("/admin/passwords")
-@PreAuthorize("hasRole('ADMIN')")
 class AdminPasswordController(
     private val passwordEntryService: PasswordEntryService,
     private val categoryRepository: CategoryRepository
 ) {
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     fun list(
         @RequestParam(required = false) query: String?,
         model: Model
@@ -33,6 +33,7 @@ class AdminPasswordController(
     }
 
     @GetMapping("/new")
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     fun createForm(model: Model): String {
         model.addAttribute("entryRequest", PasswordEntryRequest("", "", "", "", null))
         model.addAttribute("categories", categoryRepository.findAll())
@@ -41,12 +42,14 @@ class AdminPasswordController(
     }
 
     @PostMapping
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     fun create(@ModelAttribute entryRequest: PasswordEntryRequest): String {
         passwordEntryService.create(entryRequest)
         return "redirect:/admin/passwords"
     }
 
     @GetMapping("/{id}/edit")
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     fun editForm(@PathVariable id: Long, model: Model): String {
         val entry: PasswordEntry = passwordEntryService.getById(id)
         model.addAttribute(
@@ -66,12 +69,14 @@ class AdminPasswordController(
     }
 
     @PostMapping("/{id}")
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     fun update(@PathVariable id: Long, @ModelAttribute entryRequest: PasswordEntryRequest): String {
         passwordEntryService.update(id, entryRequest)
         return "redirect:/admin/passwords"
     }
 
     @PostMapping("/{id}/delete")
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     fun delete(@PathVariable id: Long): String {
         passwordEntryService.delete(id)
         return "redirect:/admin/passwords"

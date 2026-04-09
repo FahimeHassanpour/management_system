@@ -23,7 +23,6 @@ class AdminUserController(
         return "admin/user-management"
     }
 
-
     @GetMapping("/new")
     fun legacyNewUserRedirect(): String = "redirect:/admin/invitations"
 
