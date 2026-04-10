@@ -55,4 +55,14 @@ class AssignmentService(
             .mapNotNull { it.user?.id }
             .toSet()
     }
+
+    fun syncAssignments(passwordEntryId: Long, requestedUserIds: Set<Long>) {
+        val currentUserIds = assignedUserIdsForEntry(passwordEntryId)
+
+        val idsToAssign = requestedUserIds - currentUserIds
+        val idsToRemove = currentUserIds - requestedUserIds
+
+        idsToAssign.forEach { userId -> assign(passwordEntryId, userId) }
+        idsToRemove.forEach { userId -> unassign(passwordEntryId, userId) }
+    }
 }

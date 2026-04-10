@@ -3,6 +3,8 @@ package com.management.controllers
 import com.management.dto.PasswordEntryRequest
 import com.management.models.PasswordEntry
 import com.management.repositories.CategoryRepository
+import com.management.repositories.UserRepository
+import com.management.services.AssignmentService
 import com.management.services.PasswordEntryService
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
@@ -18,7 +20,9 @@ import org.springframework.web.bind.annotation.RequestParam
 @RequestMapping("/admin/passwords")
 class AdminPasswordController(
     private val passwordEntryService: PasswordEntryService,
-    private val categoryRepository: CategoryRepository
+    private val categoryRepository: CategoryRepository,
+    private val assignmentService: AssignmentService,
+    private val userRepository: UserRepository
 ) {
 
     @GetMapping
@@ -35,8 +39,10 @@ class AdminPasswordController(
     @GetMapping("/new")
     @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     fun createForm(model: Model): String {
-        model.addAttribute("entryRequest", PasswordEntryRequest("", "", "", "", null))
+        model.addAttribute("entryRequest", PasswordEntryRequest("", "", "", "", null, emptyList()))
         model.addAttribute("categories", categoryRepository.findAll())
+        model.addAttribute("users", userRepository.findAll())
+        model.addAttribute("selectedUserIds", emptySet<Long>())
         model.addAttribute("isEdit", false)
         return "admin/password-form"
     }
@@ -44,7 +50,9 @@ class AdminPasswordController(
     @PostMapping
     @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     fun create(@ModelAttribute entryRequest: PasswordEntryRequest): String {
-        passwordEntryService.create(entryRequest)
+        val entry = passwordEntryService.create(entryRequest)
+        val entryId = entry.id ?: throw RuntimeException("Failed to create password entry")
+        assignmentService.syncAssignments(entryId, entryRequest.userIds.toSet())
         return "redirect:/admin/passwords"
     }
 
@@ -59,11 +67,14 @@ class AdminPasswordController(
                 username = entry.username,
                 password = entry.password,
                 description = entry.description,
-                categoryId = entry.category?.id
+                categoryId = entry.category?.id,
+                userIds = assignmentService.assignedUserIdsForEntry(id).toList()
             )
         )
         model.addAttribute("entryId", id)
         model.addAttribute("categories", categoryRepository.findAll())
+        model.addAttribute("users", userRepository.findAll())
+        model.addAttribute("selectedUserIds", assignmentService.assignedUserIdsForEntry(id))
         model.addAttribute("isEdit", true)
         return "admin/password-form"
     }
@@ -72,6 +83,7 @@ class AdminPasswordController(
     @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     fun update(@PathVariable id: Long, @ModelAttribute entryRequest: PasswordEntryRequest): String {
         passwordEntryService.update(id, entryRequest)
+        assignmentService.syncAssignments(id, entryRequest.userIds.toSet())
         return "redirect:/admin/passwords"
     }
 

@@ -5,5 +5,6 @@ data class PasswordEntryRequest(
     val username: String,
     val password: String,
     val description: String = "",
-    val categoryId: Long? = null
+    val categoryId: Long? = null,
+    val userIds: List<Long> = emptyList()
 )
