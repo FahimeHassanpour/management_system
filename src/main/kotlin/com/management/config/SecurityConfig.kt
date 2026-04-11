@@ -30,6 +30,8 @@ class SecurityConfig {
                 it.requestMatchers("/admin/invitations/**").hasRole("ADMIN")
                 it.requestMatchers("/admin/users/**").hasRole("ADMIN")
 
+                it.requestMatchers("/admin/categories/**").hasRole("ADMIN")
+
                 it.requestMatchers("/admin/passwords/**").hasAnyRole("ADMIN", "MANAGER")
 
                 it.requestMatchers("/manager/**").hasAnyRole("MANAGER", "ADMIN")

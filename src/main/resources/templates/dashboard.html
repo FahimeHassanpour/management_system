@@ -57,6 +57,17 @@
                th:text="#{dashboard.card.adminInvite.link}">Invite user</a>
         </article>
 
+        <article class="card" sec:authorize="hasRole('ADMIN')">
+            <h2 th:text="#{dashboard.card.adminCategories.title}">Password categories</h2>
+            <p th:text="#{dashboard.card.adminCategories.desc}">
+                Create and manage categories for password entries.
+            </p>
+            <a href="/admin/categories"
+               class="card-link"
+               th:href="@{/admin/categories}"
+               th:text="#{dashboard.card.adminCategories.link}">Manage categories</a>
+        </article>
+
         <!-- Manager and admin -->
         <article class="card" sec:authorize="hasAnyRole('MANAGER','ADMIN')">
             <h2 th:text="#{dashboard.card.manager.title}">Manager dashboard</h2>

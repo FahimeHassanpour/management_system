@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" class="wa-dark">
+<head th:replace="fragments/head :: commonHead('Password categories')"> </head>
+
+<body class="dashboard-body">
+<div class="dashboard-container">
+
+    <header class="page-header">
+        <h1>Password categories</h1>
+        <p>Create password categories used when saving password entries</p>
+    </header>
+
+    <section class="card form-card" style="margin-top: var(--wa-space-m);">
+        <h2 style="margin-top: 0; font-size: var(--wa-font-size-l);">Add category</h2>
+        <form th:action="@{/admin/categories}" method="post" class="entry-form">
+            <div class="form-grid">
+                <div class="field">
+                    <label for="name">Name</label>
+                    <input id="name" type="text" name="name" required placeholder="e.g. Infrastructure" />
+                </div>
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn-primary" style="width:auto; margin:0;">Add category</button>
+            </div>
+        </form>
+    </section>
+
+    <section class="card" style="margin-top: var(--wa-space-m);">
+        <h2 style="margin-top: 0; font-size: var(--wa-font-size-l);">Existing categories</h2>
+
+        <div class="table-wrap" th:if="${categories != null and !#lists.isEmpty(categories)}">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Name</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="cat : ${categories}">
+                    <td th:text="${cat.name}">Name</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p th:if="${categories == null or #lists.isEmpty(categories)}"
+           style="color: var(--wa-color-text-quiet); margin: 0;">
+            No categories yet. Add one above.
+        </p>
+    </section>
+
+    <footer class="dashboard-footer">
+        <a href="/dashboard" class="card-link">Back to dashboard</a>
+        <span style="display:inline-block; width: var(--wa-space-s);"></span>
+        <a href="/admin/passwords" class="card-link">Back to password entries</a>
+    </footer>
+</div>
+</body>
+</html>
+
