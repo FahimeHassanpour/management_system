@@ -1,50 +1,124 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" class="wa-dark">
 <head th:replace="fragments/head :: commonHead('Register')"></head>
-<body>
-<h2>Complete registration</h2>
 
-<p th:if="${error}" th:text="${error}" style="color: red;"></p>
+<body class="login-body">
+<div class="login-container">
+    <section class="login-card invite-card">
+        <header class="login-header">
+            <i class="fa-solid fa-user-plus"></i>
+            <h2>Complete registration</h2>
+            <p class="subtitle">Finish setting up your account from the invitation.</p>
+        </header>
 
-<form th:action="@{/register}" method="post">
-    <input type="hidden" name="token" th:value="${token}"/>
+        <div th:if="${error}" class="alert alert-error">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span th:text="${error}">Invalid registration request.</span>
+        </div>
 
-    <input type="email" name="email" th:value="${email}" readonly required/>
-    <br/>
+        <form th:action="@{/register}" method="post" class="login-form" id="registerForm">
+            <input type="hidden" name="token" th:value="${token}" />
 
-    <input type="text" name="username" placeholder="Username" required/>
-    <br/>
+            <div class="form-group">
+                <label for="email">
+                    <i class="fa-regular fa-envelope"></i>
+                    Email
+                </label>
+                <input id="email"
+                       type="email"
+                       name="email"
+                       th:value="${email}"
+                       readonly
+                       required />
+            </div>
 
-    <input
-            id="password"
-            type="password"
-            name="password"
-            placeholder="Password"
-            required
-            minlength="8"
-            pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}"
-            title="At least 8 characters, including uppercase, lowercase, number, and symbol."/>
-    <br/>
+            <div class="form-group">
+                <label for="username">
+                    <i class="fa-regular fa-user"></i>
+                    Username
+                </label>
+                <input id="username"
+                       type="text"
+                       name="username"
+                       placeholder="Choose a username"
+                       required />
+            </div>
 
-    <ul id="password-rules" style="list-style:none; padding-left:0; font-size:0.9rem; margin:8px 0 12px;">
-        <li id="rule-len">At least 8 characters</li>
-        <li id="rule-lower">One lowercase letter</li>
-        <li id="rule-upper">One uppercase letter</li>
-        <li id="rule-digit">One number</li>
-        <li id="rule-symbol">One symbol</li>
-    </ul>
+            <div class="form-group">
+                <label for="fullname">
+                    <i class="fa-regular fa-id-card"></i>
+                    Full name
+                </label>
+                <input id="fullname"
+                       type="text"
+                       name="fullname"
+                       placeholder="Your full name"
+                       required />
+            </div>
 
-    <p id="password-error" style="color:red; display:none; margin-top:0;">
-        Password does not meet all requirements.
-    </p>
+            <div class="form-group">
+                <label for="password">
+                    <i class="fa-solid fa-lock"></i>
+                    Password
+                </label>
+                <div class="password-row">
+                    <input id="password"
+                           type="password"
+                           name="password"
+                           placeholder="Create a strong password"
+                           required
+                           minlength="8"
+                           pattern="(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^\w\s]).{8,}"
+                           title="At least 8 characters, including uppercase, lowercase, number, and symbol." />
+                    <button type="button" class="btn-secondary" id="togglePasswordBtn">Show</button>
+                </div>
+            </div>
 
-    <button type="submit">Register</button>
-</form>
+            <div class="form-group">
+                <label for="confirmPassword">
+                    <i class="fa-solid fa-lock"></i>
+                    Confirm password
+                </label>
+                <input id="confirmPassword"
+                       type="password"
+                       name="confirmPassword"
+                       placeholder="Re-enter password"
+                       required />
+            </div>
+
+            <ul id="password-rules">
+                <li><input type="checkbox" id="rule-len" disabled> At least 8 characters</li>
+                <li><input type="checkbox" id="rule-lower" disabled> One lowercase letter</li>
+                <li><input type="checkbox" id="rule-upper" disabled> One uppercase letter</li>
+                <li><input type="checkbox" id="rule-digit" disabled> One number</li>
+                <li><input type="checkbox" id="rule-symbol" disabled> One symbol</li>
+            </ul>
+
+            <p id="password-error" style="color:#ef4444; display:none; margin:0;">
+                Password does not meet all requirements.
+            </p>
+            <p id="confirm-error" style="color:#ef4444; display:none; margin:0;">
+                Password and confirm password do not match.
+            </p>
+
+            <button type="submit" class="btn-primary">
+                <i class="fa-solid fa-check"></i>
+                Register
+            </button>
+        </form>
+    </section>
+</div>
 
 <script>
     (function () {
+        const form = document.getElementById('registerForm');
         const passwordInput = document.getElementById('password');
-        if (!passwordInput) return;
+        const confirmInput = document.getElementById('confirmPassword');
+        const passwordError = document.getElementById('password-error');
+        const confirmError = document.getElementById('confirm-error');
+        const toggleBtn = document.getElementById('togglePasswordBtn');
+
+        if (!form || !passwordInput || !confirmInput) return;
 
         const rules = {
             len: document.getElementById('rule-len'),
@@ -53,16 +127,14 @@
             digit: document.getElementById('rule-digit'),
             symbol: document.getElementById('rule-symbol')
         };
-        const error = document.getElementById('password-error');
-        const form = passwordInput.closest('form');
 
         function paint(el, ok) {
             if (!el) return;
-            el.style.color = ok ? 'green' : '';
-            el.style.fontWeight = ok ? '600' : '400';
+            el.style.color = ok ? "#22c55e" : "";
+            el.style.fontWeight = ok ? "600" : "400";
         }
 
-        function validate(value) {
+        function validatePassword(value) {
             const okLen = value.length >= 8;
             const okLower = /[a-z]/.test(value);
             const okUpper = /[A-Z]/.test(value);
@@ -78,19 +150,41 @@
             return okLen && okLower && okUpper && okDigit && okSymbol;
         }
 
-        passwordInput.addEventListener('input', function () {
-            validate(passwordInput.value);
-            if (error) error.style.display = 'none';
-        });
+        function validateConfirm() {
+            return passwordInput.value === confirmInput.value;
+        }
 
-        form.addEventListener('submit', function (e) {
-            if (!validate(passwordInput.value)) {
-                e.preventDefault();
-                if (error) error.style.display = 'block';
+        passwordInput.addEventListener('input', function () {
+            validatePassword(passwordInput.value);
+            passwordError.style.display = 'none';
+            if (confirmInput.value.length > 0) {
+                confirmError.style.display = validateConfirm() ? 'none' : 'block';
             }
         });
 
-        validate(passwordInput.value || '');
+        confirmInput.addEventListener('input', function () {
+            confirmError.style.display = validateConfirm() ? 'none' : 'block';
+        });
+
+        form.addEventListener('submit', function (e) {
+            const okPassword = validatePassword(passwordInput.value);
+            const okConfirm = validateConfirm();
+
+            if (!okPassword || !okConfirm) {
+                e.preventDefault();
+                passwordError.style.display = okPassword ? 'none' : 'block';
+                confirmError.style.display = okConfirm ? 'none' : 'block';
+            }
+        });
+
+        toggleBtn.addEventListener('click', function () {
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            confirmInput.type = isPassword ? 'text' : 'password';
+            toggleBtn.textContent = isPassword ? 'Hide' : 'Show';
+        });
+
+        validatePassword(passwordInput.value || '');
     })();
 </script>
 </body>

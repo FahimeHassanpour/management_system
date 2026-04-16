@@ -2,50 +2,74 @@ package com.management.controllers
 
 import com.management.models.Category
 import com.management.repositories.CategoryRepository
+import com.management.repositories.PasswordEntryRepository
+import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.bind.annotation.*
 
 @Controller
 @RequestMapping("/admin/categories")
 @PreAuthorize("hasRole('ADMIN')")
 class AdminCategoryController(
-    private val categoryRepository: CategoryRepository
+    private val categoryRepository: CategoryRepository,
+    private val passwordEntryRepository: PasswordEntryRepository
 ) {
 
     @GetMapping
     fun list(model: Model): String {
-        model.addAttribute("categories", categoryRepository.findAll().sortedBy { it.name.lowercase() })
+        model.addAttribute(
+            "categories",
+            categoryRepository.findAll().sortedBy { it.name.lowercase() }
+        )
         return "admin/category-list"
     }
 
     @PostMapping
-    fun create(
-        @RequestParam name: String,
-        model: Model
-    ): String {
-        val trimmedName = name.trim()
-        if (trimmedName.isEmpty()) {
-            model.addAttribute("error", "Category name is required.")
-            model.addAttribute("categories", categoryRepository.findAll().sortedBy { it.name.lowercase() })
-            return "admin/category-list"
+    fun create(@RequestParam name: String): String {
+        val trimmed = name.trim()
+
+        if (trimmed.isNotEmpty()) {
+            if (categoryRepository.findByName(trimmed).isEmpty) {
+                categoryRepository.save(Category(name = trimmed))
+            }
         }
 
-        if (categoryRepository.findByName(trimmedName).isPresent) {
-            model.addAttribute("error", "A category with this name already exists.")
-            model.addAttribute("categories", categoryRepository.findAll().sortedBy { it.name.lowercase() })
-            return "admin/category-list"
-        }
-
-        categoryRepository.save(
-            Category(
-                name = trimmedName,
-            )
-        )
         return "redirect:/admin/categories"
     }
+
+    @PostMapping("/update")
+    fun update(@RequestParam id: Long, @RequestParam name: String): String {
+        val category = categoryRepository.findById(id).orElseThrow()
+        category.name = name
+        categoryRepository.save(category)
+
+        return "redirect:/admin/categories"
+
+        
+    }
+
+    @PostMapping("/delete")
+    @ResponseBody
+    fun delete(@RequestParam id: Long): ResponseEntity<Map<String, String>> {
+        val usageCount = passwordEntryRepository.countByCategoryId(id)
+
+        if (usageCount > 0) {
+            return ResponseEntity.badRequest().body(
+                mapOf("message" to "Cannot delete this category because it is used by existing password entries.")
+            )
+        }
+
+        categoryRepository.deleteById(id)
+        return ResponseEntity.ok(mapOf("message" to "Category deleted."))
+    }
+
+
+    @GetMapping("/admin/categories")
+    fun categories(): String {
+        return "categories :: content"
+    }
+
+
 }

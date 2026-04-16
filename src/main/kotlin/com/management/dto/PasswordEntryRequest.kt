@@ -6,5 +6,6 @@ data class PasswordEntryRequest(
     val password: String,
     val description: String = "",
     val categoryId: Long? = null,
-    val userIds: List<Long> = emptyList()
+    val userIds: List<Long> = emptyList(),
+    val expiryDate: String? = null
 )

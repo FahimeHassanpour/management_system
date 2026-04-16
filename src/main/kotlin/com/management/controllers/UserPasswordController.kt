@@ -1,5 +1,6 @@
 package com.management.controllers
 
+import com.management.repositories.CategoryRepository
 import com.management.services.AssignmentService
 import com.management.services.PasswordEntryService
 import org.springframework.security.access.AccessDeniedException
@@ -15,20 +16,26 @@ import org.springframework.web.bind.annotation.RequestParam
 @RequestMapping("/my/passwords")
 class UserPasswordController(
     private val assignmentService: AssignmentService,
-    private val passwordEntryService: PasswordEntryService
+    private val passwordEntryService: PasswordEntryService,
+    private val categoryRepository: CategoryRepository
 ) {
     @GetMapping
     fun list(
         authentication: Authentication,
         @RequestParam(required = false) query: String?,
+        @RequestParam(required = false) categoryId: Long?,
         model: Model
     ): String {
         val username = authentication.name
         val assignedIds = assignmentService.assignedEntryIdsForUsername(username)
-        val entries = passwordEntryService.list(query).filter { it.id in assignedIds }
+        val normalizedCategoryId = categoryId?.takeIf { it != 0L }
+        val entries = passwordEntryService.list(query, normalizedCategoryId)
+            .filter { it.id in assignedIds }
 
         model.addAttribute("entries", entries)
         model.addAttribute("query", query ?: "")
+        model.addAttribute("categories", categoryRepository.findAll())
+        model.addAttribute("categoryId", normalizedCategoryId)
         return "user/password-list"
     }
 

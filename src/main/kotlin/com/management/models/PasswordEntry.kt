@@ -2,6 +2,7 @@ package com.management.models
 
 
 import jakarta.persistence.*
+import java.time.LocalDateTime
 
 @Entity
 @Table(name = "password_entries")
@@ -24,5 +25,11 @@ data class PasswordEntry(
 
     @ManyToOne
     @JoinColumn(name = "category_id")
-    var category: Category? = null
+    var category: Category? = null,
+
+    @Column(name = "expiry_date")
+    var expiryDate: LocalDateTime? = null,
+
+
+
 )

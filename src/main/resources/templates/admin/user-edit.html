@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" class="wa-dark">
+
+<head th:replace="fragments/head :: commonHead('Edit User')"></head>
+
+<body class="dashboard-body">
+
+<div class="dashboard-container">
+
+    <section class="card form-card">
+
+        <header class="page-header">
+            <h1>Edit User</h1>
+            <p>Update user information</p>
+        </header>
+
+        <form th:action="@{'/admin/users/' + ${user.id} + '/info'}"
+              method="post"
+              class="entry-form">
+
+            <div class="form-grid">
+
+                <div class="field">
+                    <label>Username</label>
+                    <input type="text" name="username" th:value="${user.username}" required />
+                </div>
+
+                <div class="field">
+                    <label>Email</label>
+                    <input type="email" name="email" th:value="${user.email}" required />
+                </div>
+
+                <div class="field">
+                    <label>Full Name</label>
+                    <input type="text" name="fullName" th:value="${user.fullName}" required />
+                </div>
+
+                <div class="field">
+                    <label>Role</label>
+                    <select name="roleId" required>
+                        <option th:each="role : ${roles}"
+                                th:value="${role.id}"
+                                th:text="${role.name}"
+                                th:selected="${role.id == user.role.id}">
+                        </option>
+                    </select>
+                </div>
+
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">
+                    Save Changes
+                </button>
+
+                <a th:href="@{/admin/users}" class="btn-secondary">
+                    Cancel
+                </a>
+            </div>
+
+        </form>
+
+    </section>
+
+</div>
+
+</body>
+</html>

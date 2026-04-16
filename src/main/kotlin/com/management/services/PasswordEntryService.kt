@@ -5,29 +5,38 @@ import com.management.models.PasswordEntry
 import com.management.repositories.CategoryRepository
 import com.management.repositories.PasswordEntryRepository
 import org.springframework.stereotype.Service
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.format.DateTimeParseException
 
 @Service
 class PasswordEntryService(
     private val passwordEntryRepository: PasswordEntryRepository,
     private val categoryRepository: CategoryRepository
 ) {
-    fun list(query: String?): List<PasswordEntry> = passwordEntryRepository.search(query)
+    fun list(query: String?, categoryId: Long?): List<PasswordEntry> =
+        passwordEntryRepository.search(query, categoryId)
 
-    fun getById(id: Long): PasswordEntry {
-        return passwordEntryRepository.findById(id)
-            .orElseThrow { RuntimeException("Password entry not found: $id") }
-    }
+    private fun resolveRequiredCategory(categoryId: Long?) =
+        categoryId
+            ?.let { categoryRepository.findById(it).orElseThrow { RuntimeException("Category not found: $it") } }
+            ?: throw RuntimeException("Category is required")
 
     fun create(request: PasswordEntryRequest): PasswordEntry {
-        val category = request.categoryId?.let { categoryRepository.findById(it).orElse(null) }
         val entry = PasswordEntry(
             title = request.title.trim(),
             username = request.username.trim(),
             password = request.password,
             description = request.description.trim(),
-            category = category
+            category = resolveRequiredCategory(request.categoryId),
+            expiryDate = parseExpiryDate(request.expiryDate)
         )
         return passwordEntryRepository.save(entry)
+    }
+
+    fun getById(id: Long): PasswordEntry {
+        return passwordEntryRepository.findById(id)
+            .orElseThrow { RuntimeException("Password entry not found: $id") }
     }
 
     fun update(id: Long, request: PasswordEntryRequest): PasswordEntry {
@@ -36,7 +45,8 @@ class PasswordEntryService(
         existing.username = request.username.trim()
         existing.password = request.password
         existing.description = request.description.trim()
-        existing.category = request.categoryId?.let { categoryRepository.findById(it).orElse(null) }
+        existing.category = resolveRequiredCategory(request.categoryId)
+        existing.expiryDate = parseExpiryDate(request.expiryDate)
         return passwordEntryRepository.save(existing)
     }
 
@@ -46,4 +56,17 @@ class PasswordEntryService(
         }
         passwordEntryRepository.deleteById(id)
     }
+
+    private fun parseExpiryDate(value: String?): LocalDateTime? {
+        val raw = value?.trim().orEmpty()
+        if (raw.isEmpty()) return null
+        return try {
+            // accepts yyyy-MM-dd from <input type="date"> and stores at start of day
+            LocalDate.parse(raw).atStartOfDay()
+        } catch (ex: DateTimeParseException) {
+            throw RuntimeException("Invalid expiry date format: $raw")
+        }
+    }
+
+
 }

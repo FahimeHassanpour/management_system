@@ -9,6 +9,9 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder
 import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.security.web.SecurityFilterChain
+import org.springframework.boot.CommandLineRunner
+import org.flywaydb.core.Flyway
+
 
 @Configuration
 @EnableMethodSecurity
@@ -23,6 +26,11 @@ class SecurityConfig {
     fun securityFilterChain(http: HttpSecurity): SecurityFilterChain {
         http
             .csrf { it.disable() }
+            .headers { headers ->
+                headers.frameOptions { frameOptions ->
+                    frameOptions.sameOrigin()
+                }
+            }
             .authorizeHttpRequests {
                 it.requestMatchers("/login").permitAll()
                 it.requestMatchers("/register").permitAll()
@@ -54,10 +62,4 @@ class SecurityConfig {
         return http.build()
     }
 
-    @Bean
-    fun authenticationManager(
-        authenticationConfiguration: AuthenticationConfiguration
-    ): AuthenticationManager {
-        return authenticationConfiguration.authenticationManager
-    }
 }

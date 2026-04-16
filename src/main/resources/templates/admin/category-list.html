@@ -1,43 +1,96 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" class="wa-dark">
-<head th:replace="fragments/head :: commonHead('Password categories')"> </head>
+<head th:replace="fragments/head :: commonHead('Password categories')">
+
+
+    <meta name="_csrf" th:content="${_csrf.token}"/>
+    <meta name="_csrf_header" th:content="${_csrf.headerName}"/>
+
+</head>
 
 <body class="dashboard-body">
 <div class="dashboard-container">
+
 
     <header class="page-header">
         <h1>Password categories</h1>
         <p>Create password categories used when saving password entries</p>
     </header>
 
-    <section class="card form-card" style="margin-top: var(--wa-space-m);">
-        <h2 style="margin-top: 0; font-size: var(--wa-font-size-l);">Add category</h2>
+
+    <section class="card" style="margin-top: var(--wa-space-m);">
+        
+
         <form th:action="@{/admin/categories}" method="post" class="entry-form">
-            <div class="form-grid">
-                <div class="field">
+            <h2 style="margin-top: 0; font-size: var(--wa-font-size-l);">
+                Add Category
+            </h2>
+
+            <div style="display:flex; align-items:flex-end; gap: var(--wa-space-s); flex-wrap:wrap;">
+                <div class="field" style="flex:1 1 260px; margin:0;">
                     <label for="name">Name</label>
-                    <input id="name" type="text" name="name" required placeholder="e.g. Infrastructure" />
+                    <input id="name" type="text" name="name" required />
                 </div>
-            </div>
-            <div class="form-actions">
-                <button type="submit" class="btn-primary" style="width:auto; margin:0;">Add category</button>
+
+                <button type="submit" class="btn-primary">Add</button>
             </div>
         </form>
     </section>
 
-    <section class="card" style="margin-top: var(--wa-space-m);">
-        <h2 style="margin-top: 0; font-size: var(--wa-font-size-l);">Existing categories</h2>
 
-        <div class="table-wrap" th:if="${categories != null and !#lists.isEmpty(categories)}">
+    <section class="card" style="margin-top: var(--wa-space-m);">
+
+        <h2 style="margin-top: 0; font-size: var(--wa-font-size-l);">
+            Existing categories
+        </h2>
+
+        <div class="table-wrap"
+             th:if="${categories != null and !#lists.isEmpty(categories)}">
+
             <table class="data-table">
+
                 <thead>
+
                 <tr>
                     <th>Name</th>
+                    <th class="actions-cell">Actions</th>
                 </tr>
                 </thead>
+
                 <tbody>
-                <tr th:each="cat : ${categories}">
-                    <td th:text="${cat.name}">Name</td>
+
+
+                <tr th:each="cat : ${categories}" th:id="'row-' + ${cat.id}">
+                    <td>
+                        <form th:id="'update-form-' + ${cat.id}"
+                              th:action="@{/admin/categories/update}"
+                              method="post">
+                            <input type="hidden" name="id" th:value="${cat.id}" />
+                            <input th:id="'cat-name-' + ${cat.id}"
+                                   type="text"
+                                   class="category-name-input"
+                                   name="name"
+                                   th:value="${cat.name}"
+                                   readonly />
+                        </form>
+                    </td>
+
+                    <td class="actions-cell">
+                        <div class="row-actions" style="flex-wrap: nowrap;">
+                            <button type="button"
+                                    class="btn-secondary"
+                                    th:attr="data-id=${cat.id}"
+                                    onclick="toggleCategoryEdit(this)">
+                                Update
+                            </button>
+                            <button type="button"
+                                    class="btn-danger-soft"
+                                    th:onclick="'deleteCategory(' + ${cat.id} + ')'">
+                                Delete
+                            </button>
+                        </div>
+                    </td>
+
                 </tr>
                 </tbody>
             </table>
@@ -47,14 +100,69 @@
            style="color: var(--wa-color-text-quiet); margin: 0;">
             No categories yet. Add one above.
         </p>
+
     </section>
 
-    <footer class="dashboard-footer">
-        <a href="/dashboard" class="card-link">Back to dashboard</a>
-        <span style="display:inline-block; width: var(--wa-space-s);"></span>
-        <a href="/admin/passwords" class="card-link">Back to password entries</a>
-    </footer>
+
+
 </div>
+
+<script>
+    function toggleCategoryEdit(button) {
+        const id = button.getAttribute('data-id');
+        const input = document.getElementById('cat-name-' + id);
+        const form = document.getElementById('update-form-' + id);
+        if (!input || !form) return;
+
+        const isReadonly = input.hasAttribute('readonly');
+
+        if (isReadonly) {
+            input.removeAttribute('readonly');
+            input.focus();
+            input.select();
+            button.textContent = 'Save';
+            return;
+        }
+
+        form.submit();
+    }
+
+    function deleteCategory(id) {
+        if (!confirm("Are you sure?")) return;
+
+        const tokenMeta = document.querySelector('meta[name="_csrf"]');
+        const headerMeta = document.querySelector('meta[name="_csrf_header"]');
+
+        const headers = {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        };
+
+        if (tokenMeta && headerMeta) {
+            headers[headerMeta.content] = tokenMeta.content;
+        }
+
+        fetch('/admin/categories/delete', {
+            method: 'POST',
+            headers: headers,
+            body: 'id=' + id
+        })
+            .then(async (response) => {
+                const data = await response.json().catch(() => ({}));
+                if (response.ok) {
+                    const row = document.getElementById('row-' + id);
+                    if (row) row.remove();
+                } else {
+                    alert(data.message || "Cannot delete this category.");
+                }
+            })
+            .catch((error) => {
+                console.error(error);
+                alert("Error occurred");
+            });
+    }
+
+
+</script>
+
 </body>
 </html>
-

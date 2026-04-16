@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
+import java.time.format.DateTimeFormatter
 
 @Controller
 @RequestMapping("/admin/passwords")
@@ -24,42 +25,62 @@ class AdminPasswordController(
     private val assignmentService: AssignmentService,
     private val userRepository: UserRepository
 ) {
+    private val dtFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+    private val privilegedRoles = setOf("ADMIN", "MANAGER")
 
     @GetMapping
     @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     fun list(
         @RequestParam(required = false) query: String?,
+        @RequestParam(required = false) categoryId: Long?,
         model: Model
     ): String {
-        model.addAttribute("entries", passwordEntryService.list(query))
+        val normalizedCategoryId = categoryId?.takeIf { it != 0L }
+        val entries = passwordEntryService.list(query, normalizedCategoryId)
+        val entryUsers: Map<Long, List<String>> = entries
+            .mapNotNull { entry ->
+                val entryId = entry.id ?: return@mapNotNull null
+                val userIds = assignmentService.assignedUserIdsForEntry(entryId)
+                val users = if (userIds.isEmpty()) {
+                    emptyList()
+                } else {
+                    userRepository.findAllById(userIds)
+                        .filter { user ->
+                            val roleName = user.role?.name?.trim()?.uppercase()
+                            roleName == null || roleName !in privilegedRoles
+                        }
+                        .map { "${it.username} (${it.email})" }
+                        .sorted()
+                }
+                entryId to users
+            }
+            .toMap()
+
+        model.addAttribute("entryUsers", entryUsers)
+        model.addAttribute("entries", entries)
         model.addAttribute("query", query ?: "")
+        model.addAttribute("categories", categoryRepository.findAll())
+        model.addAttribute("categoryId", normalizedCategoryId)
         return "admin/password-list"
     }
 
     @GetMapping("/new")
     @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     fun createForm(model: Model): String {
-        model.addAttribute("entryRequest", PasswordEntryRequest("", "", "", "", null, emptyList()))
+        model.addAttribute("entryRequest", PasswordEntryRequest("", "", ""))
         model.addAttribute("categories", categoryRepository.findAll())
-        model.addAttribute("users", userRepository.findAll())
+        model.addAttribute("users", assignableUsers())
         model.addAttribute("selectedUserIds", emptySet<Long>())
         model.addAttribute("isEdit", false)
         return "admin/password-form"
-    }
-
-    @PostMapping
-    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
-    fun create(@ModelAttribute entryRequest: PasswordEntryRequest): String {
-        val entry = passwordEntryService.create(entryRequest)
-        val entryId = entry.id ?: throw RuntimeException("Failed to create password entry")
-        assignmentService.syncAssignments(entryId, entryRequest.userIds.toSet())
-        return "redirect:/admin/passwords"
     }
 
     @GetMapping("/{id}/edit")
     @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     fun editForm(@PathVariable id: Long, model: Model): String {
         val entry: PasswordEntry = passwordEntryService.getById(id)
+        val selectedUserIds = assignmentService.assignedUserIdsForEntry(id)
+
         model.addAttribute(
             "entryRequest",
             PasswordEntryRequest(
@@ -68,20 +89,32 @@ class AdminPasswordController(
                 password = entry.password,
                 description = entry.description,
                 categoryId = entry.category?.id,
-                userIds = assignmentService.assignedUserIdsForEntry(id).toList()
+                userIds = selectedUserIds.toList(),
+                expiryDate = entry.expiryDate?.format(dtFormatter)
             )
         )
         model.addAttribute("entryId", id)
         model.addAttribute("categories", categoryRepository.findAll())
-        model.addAttribute("users", userRepository.findAll())
-        model.addAttribute("selectedUserIds", assignmentService.assignedUserIdsForEntry(id))
+        model.addAttribute("users", assignableUsers())
+        model.addAttribute("selectedUserIds", selectedUserIds)
         model.addAttribute("isEdit", true)
         return "admin/password-form"
     }
 
+    @PostMapping
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
+    fun create(@ModelAttribute entryRequest: PasswordEntryRequest): String {
+        val savedEntry = passwordEntryService.create(entryRequest)
+        assignmentService.syncAssignments(savedEntry.id!!, entryRequest.userIds.toSet())
+        return "redirect:/admin/passwords"
+    }
+
     @PostMapping("/{id}")
     @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
-    fun update(@PathVariable id: Long, @ModelAttribute entryRequest: PasswordEntryRequest): String {
+    fun update(
+        @PathVariable id: Long,
+        @ModelAttribute entryRequest: PasswordEntryRequest
+    ): String {
         passwordEntryService.update(id, entryRequest)
         assignmentService.syncAssignments(id, entryRequest.userIds.toSet())
         return "redirect:/admin/passwords"
@@ -93,4 +126,49 @@ class AdminPasswordController(
         passwordEntryService.delete(id)
         return "redirect:/admin/passwords"
     }
+
+    private fun assignableUsers() = userRepository.findAll()
+        .filter { user ->
+            val roleName = user.role?.name?.trim()?.uppercase()
+            roleName == null || roleName !in privilegedRoles
+        }
+
+    @GetMapping("/fragments")
+    fun listFragment(
+        @RequestParam(required = false) query: String?,
+        @RequestParam(required = false) categoryId: Long?,
+        model: Model
+    ): String {
+        val normalizedCategoryId = categoryId?.takeIf { it != 0L }
+        val entries = passwordEntryService.list(query, normalizedCategoryId)
+
+        val entryUsers: Map<Long, List<String>> = entries
+            .mapNotNull { entry ->
+                val entryId = entry.id ?: return@mapNotNull null
+                val userIds = assignmentService.assignedUserIdsForEntry(entryId)
+                val users = if (userIds.isEmpty()) {
+                    emptyList()
+                } else {
+                    userRepository.findAllById(userIds)
+                        .filter { user ->
+                            val roleName = user.role?.name?.trim()?.uppercase()
+                            roleName == null || roleName !in privilegedRoles
+                        }
+                        .map { "${it.username} (${it.email})" }
+                        .sorted()
+                }
+                entryId to users
+            }
+            .toMap()
+
+        model.addAttribute("entries", entries)
+        model.addAttribute("entryUsers", entryUsers)
+        model.addAttribute("query", query ?: "")
+        model.addAttribute("categories", categoryRepository.findAll())
+        model.addAttribute("categoryId", normalizedCategoryId)
+
+        return "admin/password-list :: content"
+    }
+
+
 }

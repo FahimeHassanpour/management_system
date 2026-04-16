@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<body>
+
+<div th:fragment="sidebar(active)">
+    <aside class="sidebar">
+        <div>
+            <h2 class="logo">Management</h2>
+
+            <nav class="menu">
+                <a th:href="${#authorization.expression('hasAnyRole(''MANAGER'',''ADMIN'')')} ? @{/admin/passwords} : @{/my/passwords}"
+                   th:text="${#authorization.expression('hasAnyRole(''MANAGER'',''ADMIN'')')} ? 'Manage passwords' : 'My assigned passwords'"
+                   th:classappend="${active == 'passwords'} ? 'active'"
+                   class="nav-link">
+                    My assigned passwords
+                </a>
+
+                <a th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
+                   th:href="@{/admin/categories}"
+                   th:classappend="${active == 'categories'} ? 'active'"
+                   class="nav-link">
+                    Password categories
+                </a>
+
+                <a th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
+                   th:href="@{/admin/users}"
+                   th:classappend="${active == 'users'} ? 'active'"
+                   class="nav-link">
+                    User management
+                </a>
+            </nav>
+        </div>
+
+        <div class="logout">
+            <a th:href="@{/logout}">Logout</a>
+        </div>
+    </aside>
+</div>
+
+</body>
+</html>

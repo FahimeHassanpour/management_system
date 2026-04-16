@@ -1,5 +1,7 @@
 package com.management.controllers
 
+import com.management.repositories.RoleRepository
+import com.management.repositories.UserRepository
 import com.management.services.AdminUserService
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
@@ -12,9 +14,11 @@ import org.springframework.web.bind.annotation.RequestParam
 
 @Controller
 @RequestMapping("/admin/users")
-@PreAuthorize("hasRole('ADMIN')")
+@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
 class AdminUserController(
-    private val adminUserService: AdminUserService
+    private val adminUserService: AdminUserService,
+    private val userRepository: UserRepository,
+    private val roleRepository: RoleRepository
 ) {
     @GetMapping
     fun usersPage(model: Model): String {
@@ -35,13 +39,39 @@ class AdminUserController(
         return "redirect:/admin/users"
     }
 
-    @PostMapping("/{userId}/info")
+
+    @GetMapping("/{id}/edit")
+    fun editUser(@PathVariable id: Long, model: Model): String {
+
+        val user = userRepository.findById(id).orElseThrow()
+
+        model.addAttribute("user", user)
+        model.addAttribute("roles", roleRepository.findAll())
+
+        return "admin/user-edit"
+    }
+
+    @PostMapping("/{id}/info")
     fun updateUserInfo(
-        @PathVariable userId: Long,
+        @PathVariable id: Long,
         @RequestParam username: String,
-        @RequestParam email: String
+        @RequestParam email: String,
+        @RequestParam fullName: String
     ): String {
-        adminUserService.updateUserInfo(userId, username, email)
+
+        val user = userRepository.findById(id).orElseThrow()
+
+        user.username = username
+        user.email = email
+        user.fullName = fullName
+
+        userRepository.save(user)
+
         return "redirect:/admin/users"
     }
+    @GetMapping("/admin/users")
+    fun users(): String {
+        return "admin-users :: content"
+    }
+
 }
