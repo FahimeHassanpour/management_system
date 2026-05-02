@@ -3,6 +3,7 @@ package com.management.controllers
 import com.management.repositories.CategoryRepository
 import com.management.services.AssignmentService
 import com.management.services.PasswordEntryService
+import com.management.util.PasswordExpiry
 import org.springframework.security.access.AccessDeniedException
 import org.springframework.security.core.Authentication
 import org.springframework.stereotype.Controller
@@ -33,6 +34,7 @@ class UserPasswordController(
             .filter { it.id in assignedIds }
 
         model.addAttribute("entries", entries)
+        model.addAttribute("expiryDueIdStrings", PasswordExpiry.dueOrExpiredIdStrings(entries))
         model.addAttribute("query", query ?: "")
         model.addAttribute("categories", categoryRepository.findAll())
         model.addAttribute("categoryId", normalizedCategoryId)

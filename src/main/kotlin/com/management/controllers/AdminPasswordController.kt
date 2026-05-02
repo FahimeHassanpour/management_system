@@ -6,6 +6,7 @@ import com.management.repositories.CategoryRepository
 import com.management.repositories.UserRepository
 import com.management.services.AssignmentService
 import com.management.services.PasswordEntryService
+import com.management.util.PasswordExpiry
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
@@ -16,6 +17,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import java.time.format.DateTimeFormatter
+import org.springframework.web.servlet.mvc.support.RedirectAttributes
 
 @Controller
 @RequestMapping("/admin/passwords")
@@ -44,7 +46,7 @@ class AdminPasswordController(
                 val users = if (userIds.isEmpty()) {
                     emptyList()
                 } else {
-                    userRepository.findAllById(userIds)
+                    userRepository.findAllWithRolesByIds(userIds)
                         .filter { user ->
                             val roleName = user.role?.name?.trim()?.uppercase()
                             roleName == null || roleName !in privilegedRoles
@@ -57,7 +59,9 @@ class AdminPasswordController(
             .toMap()
 
         model.addAttribute("entryUsers", entryUsers)
+        model.addAttribute("entryUsersJoined", joinedUserLabels(entryUsers))
         model.addAttribute("entries", entries)
+        model.addAttribute("expiryDueIdStrings", PasswordExpiry.dueOrExpiredIdStrings(entries))
         model.addAttribute("query", query ?: "")
         model.addAttribute("categories", categoryRepository.findAll())
         model.addAttribute("categoryId", normalizedCategoryId)
@@ -113,10 +117,14 @@ class AdminPasswordController(
     @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     fun update(
         @PathVariable id: Long,
-        @ModelAttribute entryRequest: PasswordEntryRequest
+        @ModelAttribute entryRequest: PasswordEntryRequest,
+        redirectAttributes: RedirectAttributes
     ): String {
         passwordEntryService.update(id, entryRequest)
         assignmentService.syncAssignments(id, entryRequest.userIds.toSet())
+
+        redirectAttributes.addFlashAttribute("successMessage", "Password updated successfully and users notified")
+
         return "redirect:/admin/passwords"
     }
 
@@ -132,6 +140,10 @@ class AdminPasswordController(
             val roleName = user.role?.name?.trim()?.uppercase()
             roleName == null || roleName !in privilegedRoles
         }
+
+    /** Single string per entry for data-users (avoids commas inside th:attr / #strings.listJoin in HTML). */
+    private fun joinedUserLabels(entryUsers: Map<Long, List<String>>): Map<Long, String> =
+        entryUsers.mapValues { (_, labels) -> labels.joinToString("||") }
 
     @GetMapping("/fragments")
     fun listFragment(
@@ -149,7 +161,7 @@ class AdminPasswordController(
                 val users = if (userIds.isEmpty()) {
                     emptyList()
                 } else {
-                    userRepository.findAllById(userIds)
+                    userRepository.findAllWithRolesByIds(userIds)
                         .filter { user ->
                             val roleName = user.role?.name?.trim()?.uppercase()
                             roleName == null || roleName !in privilegedRoles
@@ -163,6 +175,8 @@ class AdminPasswordController(
 
         model.addAttribute("entries", entries)
         model.addAttribute("entryUsers", entryUsers)
+        model.addAttribute("entryUsersJoined", joinedUserLabels(entryUsers))
+        model.addAttribute("expiryDueIdStrings", PasswordExpiry.dueOrExpiredIdStrings(entries))
         model.addAttribute("query", query ?: "")
         model.addAttribute("categories", categoryRepository.findAll())
         model.addAttribute("categoryId", normalizedCategoryId)

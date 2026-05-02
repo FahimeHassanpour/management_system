@@ -320,18 +320,40 @@
             display: flex;
             flex-wrap: wrap;
             align-items: center;
-            gap: var(--wa-space-s);
+            gap: var(--wa-space-2xs);
+            margin: 0;
         }
 
         .toolbar-input {
-            flex: 1 1 260px;
-            min-width: 220px;
-            padding: var(--wa-space-s) var(--wa-space-m);
-            border-radius: var(--wa-border-radius-pill);
+            flex: 1 1 160px;
+            min-width: 140px;
+            max-width: 100%;
+            box-sizing: border-box;
+            min-height: 2.5rem;
+            padding: var(--wa-space-xs) var(--wa-space-s);
+            border-radius: var(--wa-border-radius-xs, 4px);
             border: var(--wa-form-control-border-width) var(--wa-form-control-border-style) var(--wa-form-control-border-color);
             background: var(--wa-form-control-background-color);
             color: var(--wa-form-control-value-color);
             outline: none;
+            font-size: var(--wa-font-size-s);
+        }
+
+        .toolbar-select-category {
+            flex: 0 0 auto;
+            width: 9.5rem;
+            min-width: 8rem;
+            max-width: 11rem;
+        }
+
+        /* Match default button proportions to the search field (same row, not shorter than inputs). */
+        .toolbar .btn-primary,
+        .toolbar .btn-secondary {
+            box-sizing: border-box;
+            min-height: 2.5rem;
+            padding: var(--wa-space-xs) var(--wa-space-m);
+            border-radius: var(--wa-border-radius-xs, 4px);
+            font-size: var(--wa-font-size-s);
         }
 
         .btn-secondary {
@@ -730,6 +752,111 @@
         .name-cell {
             width: calc(100% - 260px);
         }
+
+
+         .copy-toast {
+             position: fixed;
+             bottom: 20px;
+             right: 20px;
+             background: rgba(0,0,0,0.75);
+             color: white;
+             padding: 8px 12px;
+             border-radius: 6px;
+             font-size: 12px;
+             opacity: 0;
+             transform: translateY(10px);
+             transition: all 0.3s ease;
+             pointer-events: none;
+         }
+
+        .copy-toast.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+
+        .expired-row {
+            background: rgba(255, 152, 0, 0.1);
+        }
+
+        .expired-row:hover {
+            background: rgba(255, 152, 0, 0.16);
+        }
+
+        .expired-date {
+            color: #ff9800;
+            font-weight: 700;
+        }
+
+        .password-cell {
+            vertical-align: middle;
+        }
+
+        .password-reveal-btn {
+            display: block;
+            max-width: min(100%, 260px);
+            margin: 0;
+            padding: 0;
+            border: none;
+            background: none;
+            font: inherit;
+            text-align: left;
+            cursor: pointer;
+            color: inherit;
+        }
+
+        .password-reveal-btn:focus-visible {
+            outline: 2px solid var(--wa-color-focus-ring, #38bdf8);
+            outline-offset: 2px;
+            border-radius: var(--wa-border-radius-xs, 4px);
+        }
+
+        .password-mask {
+            display: inline-block;
+            font-family: ui-monospace, monospace;
+            letter-spacing: 0.2em;
+            color: var(--wa-color-text-quiet);
+            user-select: none;
+        }
+
+        /* [hidden] must win over display:inline-block or dots stay visible when revealed */
+        .password-mask[hidden] {
+            display: none !important;
+        }
+
+        .password-plain {
+            display: block;
+            font-family: ui-monospace, monospace;
+            font-size: var(--wa-font-size-s, 0.875rem);
+            word-break: break-all;
+            color: var(--wa-color-text);
+            user-select: all;
+        }
+
+        .password-plain[hidden] {
+            display: none !important;
+        }
+
+        .username-copy-btn {
+            display: inline;
+            margin: 0;
+            padding: 0;
+            border: none;
+            background: none;
+            font: inherit;
+            color: inherit;
+            cursor: pointer;
+            text-align: left;
+            text-decoration: none;
+        }
+
+        .username-copy-btn:focus-visible {
+            outline: 2px solid var(--wa-color-focus-ring, #38bdf8);
+            outline-offset: 2px;
+            border-radius: var(--wa-border-radius-xs, 4px);
+        }
+
+
 
 
     </style>

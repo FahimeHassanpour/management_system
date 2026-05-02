@@ -4,6 +4,6 @@ CREATE TABLE users (
                        email VARCHAR(150) NOT NULL UNIQUE,
                        password VARCHAR(255) NOT NULL,
                        role_id BIGINT,
-                       ALTER TABLE users ADD COLUMN full_name VARCHAR(255);
+                       full_name VARCHAR(255),
                        CONSTRAINT fk_users_role FOREIGN KEY (role_id) REFERENCES roles(id)
 );

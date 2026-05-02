@@ -56,14 +56,22 @@ class AdminUserController(
         @PathVariable id: Long,
         @RequestParam username: String,
         @RequestParam email: String,
-        @RequestParam fullName: String
+        @RequestParam fullName: String,
+        @RequestParam roleId: Long
     ): String {
 
         val user = userRepository.findById(id).orElseThrow()
 
-        user.username = username
-        user.email = email
-        user.fullName = fullName
+        val role = roleRepository.findById(roleId).orElseThrow()
+        val normalizedRole = role.name.trim().uppercase()
+        require(normalizedRole in setOf("USER", "MANAGER", "ADMIN")) {
+            "Unsupported role"
+        }
+
+        user.username = username.trim()
+        user.email = email.trim()
+        user.fullName = fullName.trim()
+        user.role = role
 
         userRepository.save(user)
 

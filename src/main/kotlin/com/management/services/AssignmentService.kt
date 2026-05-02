@@ -10,7 +10,8 @@ import org.springframework.stereotype.Service
 class AssignmentService(
     private val assignmentRepository: AssignmentRepository,
     private val userRepository: UserRepository,
-    private val passwordEntryRepository: PasswordEntryRepository
+    private val passwordEntryRepository: PasswordEntryRepository,
+    private val emailService: EmailService
 ) {
     fun assign(passwordEntryId: Long, userId: Long) {
         val user = userRepository.findById(userId)
@@ -22,6 +23,10 @@ class AssignmentService(
             return
         }
         assignmentRepository.save(Assignment(user = user, passwordEntry = entry))
+
+        emailService.sendPasswordAssignedEmail(user.email, entry.title)
+
+
     }
 
     fun unassign(passwordEntryId: Long, userId: Long) {
@@ -65,4 +70,6 @@ class AssignmentService(
         idsToAssign.forEach { userId -> assign(passwordEntryId, userId) }
         idsToRemove.forEach { userId -> unassign(passwordEntryId, userId) }
     }
+
+
 }

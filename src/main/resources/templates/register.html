@@ -130,6 +130,7 @@
 
         function paint(el, ok) {
             if (!el) return;
+            el.checked = ok;
             el.style.color = ok ? "#22c55e" : "";
             el.style.fontWeight = ok ? "600" : "400";
         }

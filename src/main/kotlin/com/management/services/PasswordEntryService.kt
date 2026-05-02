@@ -2,6 +2,7 @@ package com.management.services
 
 import com.management.dto.PasswordEntryRequest
 import com.management.models.PasswordEntry
+import com.management.repositories.AssignmentRepository
 import com.management.repositories.CategoryRepository
 import com.management.repositories.PasswordEntryRepository
 import org.springframework.stereotype.Service
@@ -12,7 +13,9 @@ import java.time.format.DateTimeParseException
 @Service
 class PasswordEntryService(
     private val passwordEntryRepository: PasswordEntryRepository,
-    private val categoryRepository: CategoryRepository
+    private val categoryRepository: CategoryRepository,
+    private val assignmentRepository: AssignmentRepository,
+    private val emailService: EmailService
 ) {
     fun list(query: String?, categoryId: Long?): List<PasswordEntry> =
         passwordEntryRepository.search(query, categoryId)
@@ -47,7 +50,18 @@ class PasswordEntryService(
         existing.description = request.description.trim()
         existing.category = resolveRequiredCategory(request.categoryId)
         existing.expiryDate = parseExpiryDate(request.expiryDate)
-        return passwordEntryRepository.save(existing)
+        val saved = passwordEntryRepository.save(existing)
+
+
+        val assignments = assignmentRepository.findByPasswordEntry(saved)
+        val users = assignments.mapNotNull { it.user }
+
+
+        users.forEach { user ->
+            emailService.sendPasswordUpdatedEmail(user.email, saved.title)
+        }
+
+        return saved
     }
 
     fun delete(id: Long) {
