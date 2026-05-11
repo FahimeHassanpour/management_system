@@ -3,6 +3,8 @@ package com.management.controllers
 import com.management.models.Category
 import com.management.repositories.CategoryRepository
 import com.management.repositories.PasswordEntryRepository
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
@@ -18,11 +20,22 @@ class AdminCategoryController(
 ) {
 
     @GetMapping
-    fun list(model: Model): String {
-        model.addAttribute(
-            "categories",
-            categoryRepository.findAll().sortedBy { it.name.lowercase() }
-        )
+    fun list(
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int,
+        model: Model
+    ): String {
+        val safePage = if (page < 0) 0 else page
+        val safeSize = if (size < 1) 10 else size
+
+        val sort = Sort.by(Sort.Order.asc("name").ignoreCase())
+        val pageResult = categoryRepository.findAll(PageRequest.of(safePage, safeSize, sort))
+
+        model.addAttribute("categories", pageResult.content)
+        model.addAttribute("currentPage", pageResult.number)
+        model.addAttribute("totalPages", pageResult.totalPages)
+        model.addAttribute("totalElements", pageResult.totalElements)
+        model.addAttribute("size", safeSize)
         return "admin/category-list"
     }
 

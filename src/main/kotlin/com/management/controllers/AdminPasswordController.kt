@@ -35,36 +35,18 @@ class AdminPasswordController(
     fun list(
         @RequestParam(required = false) query: String?,
         @RequestParam(required = false) categoryId: Long?,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int,
         model: Model
     ): String {
         val normalizedCategoryId = categoryId?.takeIf { it != 0L }
-        val entries = passwordEntryService.list(query, normalizedCategoryId)
-        val entryUsers: Map<Long, List<String>> = entries
-            .mapNotNull { entry ->
-                val entryId = entry.id ?: return@mapNotNull null
-                val userIds = assignmentService.assignedUserIdsForEntry(entryId)
-                val users = if (userIds.isEmpty()) {
-                    emptyList()
-                } else {
-                    userRepository.findAllWithRolesByIds(userIds)
-                        .filter { user ->
-                            val roleName = user.role?.name?.trim()?.uppercase()
-                            roleName == null || roleName !in privilegedRoles
-                        }
-                        .map { "${it.username} (${it.email})" }
-                        .sorted()
-                }
-                entryId to users
-            }
-            .toMap()
-
-        model.addAttribute("entryUsers", entryUsers)
-        model.addAttribute("entryUsersJoined", joinedUserLabels(entryUsers))
-        model.addAttribute("entries", entries)
-        model.addAttribute("expiryDueIdStrings", PasswordExpiry.dueOrExpiredIdStrings(entries))
-        model.addAttribute("query", query ?: "")
-        model.addAttribute("categories", categoryRepository.findAll())
-        model.addAttribute("categoryId", normalizedCategoryId)
+        val entriesPage = passwordEntryService.list(
+            query,
+            normalizedCategoryId,
+            page,
+            size
+        )
+        populatePasswordListModel(model, entriesPage, page, size, query, normalizedCategoryId)
         return "admin/password-list"
     }
 
@@ -149,10 +131,26 @@ class AdminPasswordController(
     fun listFragment(
         @RequestParam(required = false) query: String?,
         @RequestParam(required = false) categoryId: Long?,
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int,
         model: Model
     ): String {
         val normalizedCategoryId = categoryId?.takeIf { it != 0L }
-        val entries = passwordEntryService.list(query, normalizedCategoryId)
+        val entriesPage = passwordEntryService.list(query, normalizedCategoryId, page, size)
+        populatePasswordListModel(model, entriesPage, page, size, query, normalizedCategoryId)
+        return "admin/password-list :: content"
+    }
+
+
+    private fun populatePasswordListModel(
+        model: Model,
+        entriesPage: org.springframework.data.domain.Page<PasswordEntry>,
+        page: Int,
+        size: Int,
+        query: String?,
+        normalizedCategoryId: Long?
+    ) {
+        val entries = entriesPage.content
 
         val entryUsers: Map<Long, List<String>> = entries
             .mapNotNull { entry ->
@@ -177,12 +175,12 @@ class AdminPasswordController(
         model.addAttribute("entryUsers", entryUsers)
         model.addAttribute("entryUsersJoined", joinedUserLabels(entryUsers))
         model.addAttribute("expiryDueIdStrings", PasswordExpiry.dueOrExpiredIdStrings(entries))
+        model.addAttribute("currentPage", page)
+        model.addAttribute("totalPages", entriesPage.totalPages)
+        model.addAttribute("totalElements", entriesPage.totalElements)
+        model.addAttribute("size", size)
         model.addAttribute("query", query ?: "")
         model.addAttribute("categories", categoryRepository.findAll())
         model.addAttribute("categoryId", normalizedCategoryId)
-
-        return "admin/password-list :: content"
     }
-
-
 }

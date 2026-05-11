@@ -1,11 +1,13 @@
 package com.management.models
 
-
 import jakarta.persistence.*
+import org.hibernate.envers.Audited
+import org.hibernate.envers.RelationTargetAuditMode
 import java.time.LocalDateTime
 
 @Entity
 @Table(name = "password_entries")
+@Audited
 data class PasswordEntry(
 
     @Id
@@ -25,11 +27,11 @@ data class PasswordEntry(
 
     @ManyToOne
     @JoinColumn(name = "category_id")
+    @Audited(targetAuditMode = RelationTargetAuditMode.NOT_AUDITED)
     var category: Category? = null,
 
     @Column(name = "expiry_date")
     var expiryDate: LocalDateTime? = null,
 
-
-
 )
+

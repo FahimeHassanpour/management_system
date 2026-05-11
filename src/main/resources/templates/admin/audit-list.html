@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" class="wa-dark">
+<head th:replace="fragments/head :: commonHead('Audit Logs')"></head>
+
+<body class="dashboard-body">
+<div class="dashboard-container">
+
+    <header class="page-header">
+        <h1>Audit logs</h1>
+        <p>Every change made to passwords, users, categories, roles, assignments and invitations.</p>
+    </header>
+
+    <div th:if="${successMessage}" class="alert alert-success" style="margin-bottom: var(--wa-space-s);">
+        <span th:text="${successMessage}"></span>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger" style="margin-bottom: var(--wa-space-s);">
+        <span th:text="${errorMessage}"></span>
+    </div>
+
+    <section class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap: var(--wa-space-s);">
+            <p style="margin:0; color: var(--wa-color-text-quiet);"
+               th:text="${totalElements != null ? totalElements + ' change record(s)' : '0 change record(s)'}">
+                0 change record(s)
+            </p>
+
+            <div style="display:flex; align-items:center; gap: var(--wa-space-xs); flex-wrap: wrap;">
+                <a th:href="@{/admin/audit/export.pdf}"
+                   class="btn-primary"
+                   title="Download every audit record as a PDF">
+                    Download PDF
+                </a>
+
+                <form th:action="@{/admin/audit/purge}" method="post"
+                      onsubmit="return confirm('Run the 6-month retention purge? This deletes any audit record older than 6 months.');"
+                      style="margin:0;">
+                    <button type="submit" class="btn-secondary">Purge older than 6mo</button>
+                </form>
+
+<!--                <form th:action="@{/admin/audit/delete-all}" method="post"-->
+<!--                      onsubmit="return confirm('Delete ALL audit history? This cannot be undone.');"-->
+<!--                      style="margin:0;">-->
+<!--                    <button type="submit" class="btn-danger-soft">Delete all</button>-->
+<!--                </form>-->
+            </div>
+        </div>
+    </section>
+
+    <section class="card" style="margin-top: var(--wa-space-m);">
+        <div class="table-wrap table-wrap-scroll" th:if="${entries != null and !#lists.isEmpty(entries)}">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Rev</th>
+                    <th>When</th>
+                    <th>Who</th>
+                    <th>Entity</th>
+                    <th>Action</th>
+                    <th>ID</th>
+                    <th>Summary</th>
+<!--                    <th>Actions</th>-->
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="entry : ${entries}">
+                    <td th:text="${entry.rev}">1</td>
+                    <td th:text="${#temporals.format(entry.changedAt, 'yyyy-MM-dd HH:mm:ss')}">2026-05-08 12:00:00</td>
+                    <td th:text="${entry.performedBy != null ? entry.performedBy : '-'}">admin</td>
+                    <td th:text="${entry.entityType}">PasswordEntry</td>
+                    <td>
+                        <span th:text="${entry.action}"
+                              th:classappend="${entry.action == 'CREATED'} ? 'badge-created'
+                                            : (${entry.action == 'UPDATED'} ? 'badge-updated' : 'badge-deleted')"
+                              class="audit-badge">
+                            UPDATED
+                        </span>
+                    </td>
+                    <td th:text="${entry.entityId != null ? entry.entityId : '-'}">42</td>
+                    <td th:text="${entry.summary != null ? entry.summary : '-'}" style="max-width: 24rem; overflow: hidden; text-overflow: ellipsis;">
+                        Summary
+                    </td>
+                    <td>
+<!--                        <form th:action="@{'/admin/audit/' + ${entry.rev} + '/delete'}" method="post"-->
+<!--                              onsubmit="return confirm('Delete revision ' + this.dataset.rev + '? This cannot be undone.');"-->
+<!--                              th:attr="data-rev=${entry.rev}"-->
+<!--                              style="margin:0;">-->
+<!--                            <button type="submit" class="btn-danger-soft">Delete</button>-->
+<!--                        </form>-->
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <p th:if="${entries == null or #lists.isEmpty(entries)}"
+           style="color: var(--wa-color-text-quiet); margin: 0;">
+            No audit records yet. Make a change in the app and refresh this page.
+        </p>
+
+        <div th:replace="~{fragments/pagination :: bar(
+            prevUrl = ${currentPage != null and currentPage > 0}
+                ? @{/admin/audit(page=${currentPage - 1}, size=${size})}
+                : null,
+            nextUrl = ${currentPage != null and totalPages != null and currentPage < totalPages - 1}
+                ? @{/admin/audit(page=${currentPage + 1}, size=${size})}
+                : null,
+            currentPage = ${currentPage},
+            totalPages = ${totalPages},
+            totalElements = ${totalElements},
+            itemLabel = 'changes'
+        )}"></div>
+    </section>
+
+</div>
+
+</body>
+</html>

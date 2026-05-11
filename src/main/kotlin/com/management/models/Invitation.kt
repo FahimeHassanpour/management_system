@@ -1,9 +1,11 @@
 package com.management.models
 
 import jakarta.persistence.*
+import org.hibernate.envers.Audited
 import java.time.Instant
 
 @Entity
+@Audited
 @Table(name = "invitations")
 class Invitation(
     @Id

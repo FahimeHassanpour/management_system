@@ -44,7 +44,7 @@
             Existing categories
         </h2>
 
-        <div class="table-wrap"
+        <div class="table-wrap table-wrap-scroll"
              th:if="${categories != null and !#lists.isEmpty(categories)}">
 
             <table class="data-table">
@@ -100,6 +100,19 @@
            style="color: var(--wa-color-text-quiet); margin: 0;">
             No categories yet. Add one above.
         </p>
+
+        <div th:replace="~{fragments/pagination :: bar(
+            prevUrl = ${currentPage != null and currentPage > 0}
+                ? @{/admin/categories(page=${currentPage - 1}, size=${size})}
+                : null,
+            nextUrl = ${currentPage != null and totalPages != null and currentPage < totalPages - 1}
+                ? @{/admin/categories(page=${currentPage + 1}, size=${size})}
+                : null,
+            currentPage = ${currentPage},
+            totalPages = ${totalPages},
+            totalElements = ${totalElements},
+            itemLabel = 'categories'
+        )}"></div>
 
     </section>
 

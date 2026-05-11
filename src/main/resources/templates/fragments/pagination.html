@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+    Reusable Prev / Next pagination bar.
+
+    Caller must build prevUrl and nextUrl with @{...} and pass null when not applicable.
+    Example:
+
+        <div th:replace="~{fragments/pagination :: bar(
+            prevUrl = ${currentPage > 0}
+                ? @{/admin/passwords(page=${currentPage - 1}, size=${size}, query=${query}, categoryId=${categoryId})}
+                : null,
+            nextUrl = ${currentPage < totalPages - 1}
+                ? @{/admin/passwords(page=${currentPage + 1}, size=${size}, query=${query}, categoryId=${categoryId})}
+                : null,
+            currentPage = ${currentPage},
+            totalPages = ${totalPages},
+            totalElements = ${totalElements},
+            itemLabel = 'entries'
+        )}"></div>
+-->
+<div th:fragment="bar(prevUrl, nextUrl, currentPage, totalPages, totalElements, itemLabel)"
+     class="pagination-bar"
+     th:if="${totalElements != null and totalElements > 0}">
+
+    <div class="pagination-controls">
+        <a th:if="${prevUrl != null}"
+           th:href="${prevUrl}"
+           class="pagination-btn"
+           rel="prev"
+           aria-label="Previous page"
+           title="Previous page">
+            <i class="fa-solid fa-chevron-left"></i>
+        </a>
+        <span th:unless="${prevUrl != null}"
+              class="pagination-btn pagination-btn-disabled"
+              aria-disabled="true"
+              aria-label="Previous page (disabled)"
+              title="Previous page">
+            <i class="fa-solid fa-chevron-left"></i>
+        </span>
+
+        <span class="pagination-indicator"
+              th:text="|${currentPage + 1} of ${totalPages != null and totalPages > 0 ? totalPages : 1}|">
+        </span>
+
+        <a th:if="${nextUrl != null}"
+           th:href="${nextUrl}"
+           class="pagination-btn"
+           rel="next"
+           aria-label="Next page"
+           title="Next page">
+            <i class="fa-solid fa-chevron-right"></i>
+        </a>
+        <span th:unless="${nextUrl != null}"
+              class="pagination-btn pagination-btn-disabled"
+              aria-disabled="true"
+              aria-label="Next page (disabled)"
+              title="Next page">
+            <i class="fa-solid fa-chevron-right"></i>
+        </span>
+    </div>
+</div>
+
+</body>
+</html>

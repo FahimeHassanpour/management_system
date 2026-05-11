@@ -3,6 +3,8 @@ package com.management.controllers
 import com.management.repositories.RoleRepository
 import com.management.repositories.UserRepository
 import com.management.services.AdminUserService
+import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Sort
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
@@ -21,8 +23,22 @@ class AdminUserController(
     private val roleRepository: RoleRepository
 ) {
     @GetMapping
-    fun usersPage(model: Model): String {
-        model.addAttribute("users", adminUserService.listUsers())
+    fun usersPage(
+        @RequestParam(defaultValue = "0") page: Int,
+        @RequestParam(defaultValue = "10") size: Int,
+        model: Model
+    ): String {
+        val safePage = if (page < 0) 0 else page
+        val safeSize = if (size < 1) 10 else size
+
+        val sort = Sort.by(Sort.Order.asc("username").ignoreCase())
+        val pageResult = userRepository.findAll(PageRequest.of(safePage, safeSize, sort))
+
+        model.addAttribute("users", pageResult.content)
+        model.addAttribute("currentPage", pageResult.number)
+        model.addAttribute("totalPages", pageResult.totalPages)
+        model.addAttribute("totalElements", pageResult.totalElements)
+        model.addAttribute("size", safeSize)
         model.addAttribute("roles", adminUserService.listRoles())
         return "admin/user-management"
     }

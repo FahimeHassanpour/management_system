@@ -4,6 +4,8 @@ import com.management.models.PasswordEntry
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
 import org.springframework.data.repository.query.Param
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 
 interface PasswordEntryRepository : JpaRepository<PasswordEntry, Long> {
     @Query(
@@ -17,8 +19,9 @@ interface PasswordEntryRepository : JpaRepository<PasswordEntry, Long> {
     )
     fun search(
         @Param("query") query: String?,
-        @Param("categoryId") categoryId: Long?
-    ): List<PasswordEntry>
+        @Param("categoryId") categoryId: Long?,
+        pageable: Pageable
+    ): Page<PasswordEntry>
 
     fun countByCategoryId(categoryId: Long): Long
 }

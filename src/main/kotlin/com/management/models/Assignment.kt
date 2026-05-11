@@ -1,9 +1,11 @@
 package com.management.models
 
 import jakarta.persistence.*
+import org.hibernate.envers.Audited
 import java.time.LocalDateTime
 
 @Entity
+@Audited
 @Table(name = "assignments")
 data class Assignment(
 

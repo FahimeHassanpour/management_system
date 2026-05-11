@@ -29,6 +29,13 @@
                    class="nav-link">
                     User management
                 </a>
+
+                <a th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
+                   th:href="@{/admin/audit}"
+                   th:classappend="${active == 'audit'} ? 'active'"
+                   class="nav-link">
+                    Audit logs
+                </a>
             </nav>
         </div>
 

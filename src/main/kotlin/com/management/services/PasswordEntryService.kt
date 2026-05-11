@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeParseException
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.PageRequest
 
 @Service
 class PasswordEntryService(
@@ -17,8 +19,19 @@ class PasswordEntryService(
     private val assignmentRepository: AssignmentRepository,
     private val emailService: EmailService
 ) {
-    fun list(query: String?, categoryId: Long?): List<PasswordEntry> =
-        passwordEntryRepository.search(query, categoryId)
+    fun list(
+        query: String?,
+        categoryId: Long?,
+        page: Int,
+        size: Int
+    ): Page<PasswordEntry> {
+
+        return passwordEntryRepository.search(
+            query,
+            categoryId,
+            PageRequest.of(page, size)
+        )
+    }
 
     private fun resolveRequiredCategory(categoryId: Long?) =
         categoryId

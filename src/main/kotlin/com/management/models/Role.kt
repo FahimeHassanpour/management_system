@@ -1,8 +1,10 @@
 package com.management.models
 
 import jakarta.persistence.*
+import org.hibernate.envers.Audited
 
 @Entity
+@Audited
 @Table(name = "roles")
 data class Role(
 

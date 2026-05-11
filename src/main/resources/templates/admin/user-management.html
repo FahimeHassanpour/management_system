@@ -16,16 +16,26 @@
     </header>
 
 
+    <!-- FLASH MESSAGES -->
+    <div th:if="${successMessage}" class="alert alert-success" style="margin-bottom: var(--wa-space-s);">
+        <span th:text="${successMessage}"></span>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger" style="margin-bottom: var(--wa-space-s);">
+        <span th:text="${errorMessage}"></span>
+    </div>
+
     <!-- ADMIN ACTIONS -->
     <section class="card" sec:authorize="hasRole('ADMIN')">
-        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap;">
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap: var(--wa-space-s);">
             <p style="margin:0; color: var(--wa-color-text-quiet);">
                 Access administration
             </p>
 
-            <a th:href="@{/admin/invitations}" class="card-link">
-                Invite user
-            </a>
+            <div style="display:flex; align-items:center; gap: var(--wa-space-xs); flex-wrap: wrap;">
+                <a th:href="@{/admin/invitations}" class="card-link">
+                    Invite user
+                </a>
+            </div>
         </div>
     </section>
 
@@ -36,12 +46,12 @@
             <h2 style="margin:0;">Users</h2>
 
             <p style="margin:0; color: var(--wa-color-text-quiet);"
-               th:text="${users != null ? #lists.size(users) + ' user(s)' : '0 user(s)'}">
+               th:text="${totalElements != null ? totalElements + ' user(s)' : (users != null ? #lists.size(users) + ' user(s)' : '0 user(s)')}">
                 0 user(s)
             </p>
         </div>
 
-        <div class="table-wrap">
+        <div class="table-wrap table-wrap-scroll">
             <table class="data-table">
 
                 <thead>
@@ -89,6 +99,19 @@
 
             </table>
         </div>
+
+        <div th:replace="~{fragments/pagination :: bar(
+            prevUrl = ${currentPage != null and currentPage > 0}
+                ? @{/admin/users(page=${currentPage - 1}, size=${size})}
+                : null,
+            nextUrl = ${currentPage != null and totalPages != null and currentPage < totalPages - 1}
+                ? @{/admin/users(page=${currentPage + 1}, size=${size})}
+                : null,
+            currentPage = ${currentPage},
+            totalPages = ${totalPages},
+            totalElements = ${totalElements},
+            itemLabel = 'users'
+        )}"></div>
 
     </section>
 

@@ -49,6 +49,9 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation("org.springframework.boot:spring-boot-starter-mail")
     implementation("org.springframework.boot:spring-boot-starter-mail")
+
+    implementation("org.hibernate.orm:hibernate-envers")
+    implementation("com.github.librepdf:openpdf:3.0.3")
 }
 
 kotlin {

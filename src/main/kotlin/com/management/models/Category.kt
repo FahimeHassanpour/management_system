@@ -2,8 +2,10 @@ package com.management.models
 
 
 import jakarta.persistence.*
+import org.hibernate.envers.Audited
 
 @Entity
+@Audited
 @Table(name = "categories")
 data class Category(
 
@@ -16,3 +18,4 @@ data class Category(
 
     var description: String = ""
 )
+
