@@ -445,7 +445,7 @@
             font-weight: var(--wa-font-weight-semibold);
         }
 
-        .field input,
+        .field input:not([type="checkbox"]):not([type="radio"]),
         .field textarea,
         .field select {
             width: 100%;
@@ -1010,6 +1010,310 @@
             background: color-mix(in srgb, #ef4444 22%, transparent);
             border-color: color-mix(in srgb, #ef4444 55%, transparent);
             color: #f87171;
+        }
+
+
+        /* —— User management table (appearance only) —— */
+        .users-table-card .users-table-heading {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--wa-space-m);
+            padding-bottom: var(--wa-space-s);
+            border-bottom: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-surface-border);
+        }
+
+        .users-table-card .users-table-heading h2 {
+            margin: 0;
+            font-size: var(--wa-font-size-l);
+            letter-spacing: -0.02em;
+        }
+
+        .users-table-card .users-table-count {
+            margin: 0;
+            padding: var(--wa-space-2xs) var(--wa-space-s);
+            border-radius: var(--wa-border-radius-m);
+            font-size: var(--wa-font-size-2xs);
+            font-weight: var(--wa-font-weight-semibold);
+            color: var(--wa-color-text-quiet);
+            background: var(--wa-color-surface-lowered);
+            border: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-surface-border);
+        }
+
+        .users-table-card .table-wrap {
+            border-radius: var(--wa-border-radius-m);
+            border: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-surface-border);
+            background: color-mix(in srgb, var(--wa-color-surface-lowered) 40%, transparent);
+            overflow: hidden;
+        }
+
+        .data-table.users-table thead th {
+            padding: var(--wa-space-xs) var(--wa-space-s);
+            background: color-mix(in srgb, var(--wa-color-surface-lowered) 85%, transparent);
+            border-bottom: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-surface-border);
+            font-size: var(--wa-font-size-2xs);
+            font-weight: var(--wa-font-weight-semibold);
+            letter-spacing: 0.06em;
+        }
+
+        .data-table.users-table tbody tr {
+            transition: background-color 160ms ease, box-shadow 160ms ease;
+        }
+
+        .data-table.users-table tbody tr:hover {
+            background: color-mix(in srgb, var(--wa-color-brand-fill-loud) 6%, var(--wa-color-surface-raised));
+        }
+
+        .data-table.users-table tbody td {
+            padding: var(--wa-space-m) var(--wa-space-s);
+            border-bottom: var(--wa-border-width-s) var(--wa-border-style)
+                color-mix(in srgb, var(--wa-color-surface-border) 70%, transparent);
+        }
+
+        .data-table.users-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table.users-table .users-cell-name {
+            font-weight: var(--wa-font-weight-semibold);
+            color: var(--wa-color-text-normal);
+            font-size: var(--wa-font-size-s);
+        }
+
+        .data-table.users-table .users-cell-email {
+            color: var(--wa-color-text-quiet);
+            font-size: var(--wa-font-size-xs);
+        }
+
+        .data-table.users-table .users-cell-teams {
+            max-width: 14rem;
+            line-height: 1.6;
+        }
+
+        .data-table.users-table .users-cell-action {
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .data-table.users-table .users-cell-action .btn-secondary {
+            min-height: 2.25rem;
+            padding: var(--wa-space-2xs) var(--wa-space-m);
+            font-size: var(--wa-font-size-xs);
+            border-radius: var(--wa-border-radius-m);
+            transition: background-color 140ms ease, border-color 140ms ease, transform 120ms ease;
+        }
+
+        .data-table.users-table .users-cell-action .btn-secondary:hover {
+            transform: translateY(-1px);
+        }
+
+        .role-badge {
+            display: inline-block;
+            padding: 0.2rem 0.65rem;
+            border-radius: var(--wa-border-radius-xs, 4px);
+            font-size: var(--wa-font-size-2xs);
+            font-weight: var(--wa-font-weight-semibold);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            border: var(--wa-border-width-s) var(--wa-border-style) transparent;
+        }
+
+        .role-badge.role-admin {
+            background: color-mix(in srgb, #8b5cf6 24%, transparent);
+            border-color: color-mix(in srgb, #8b5cf6 50%, transparent);
+            color: #c4b5fd;
+        }
+
+        .role-badge.role-manager {
+            background: color-mix(in srgb, #f59e0b 22%, transparent);
+            border-color: color-mix(in srgb, #f59e0b 50%, transparent);
+            color: #fcd34d;
+        }
+
+        .role-badge.role-user {
+            background: color-mix(in srgb, var(--wa-color-surface-lowered) 90%, transparent);
+            border-color: var(--wa-color-surface-border);
+            color: var(--wa-color-text-quiet);
+        }
+
+        .team-pill {
+            display: inline-block;
+            padding: 0.15rem 0.55rem;
+            margin: 0.1rem 0.25rem 0.1rem 0;
+            border-radius: var(--wa-border-radius-xs, 4px);
+            font-size: var(--wa-font-size-2xs);
+            font-weight: var(--wa-font-weight-medium);
+            color: var(--wa-color-text-normal);
+            background: color-mix(in srgb, var(--wa-color-brand-fill-loud) 12%, var(--wa-color-surface-lowered));
+            border: var(--wa-border-width-s) var(--wa-border-style)
+                color-mix(in srgb, var(--wa-color-brand-fill-loud) 25%, var(--wa-color-surface-border));
+        }
+
+        .teams-empty {
+            color: var(--wa-color-text-quiet);
+            font-size: var(--wa-font-size-xs);
+            font-style: italic;
+        }
+
+        /* —— User edit form (teams panel + layout) —— */
+        .user-edit-card .user-edit-header {
+            margin-bottom: var(--wa-space-m);
+            padding-bottom: var(--wa-space-s);
+            border-bottom: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-surface-border);
+        }
+
+        .user-edit-card .user-edit-header h1 {
+            margin-bottom: var(--wa-space-2xs);
+        }
+
+        .user-edit-card,
+        .user-edit-form,
+        .user-edit-form .user-edit-teams-field,
+        .user-edit-form .team-selector {
+            overflow: visible;
+        }
+
+        .user-edit-form .user-edit-teams-field {
+            margin-top: var(--wa-space-xs);
+            padding-top: var(--wa-space-m);
+            border-top: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-surface-border);
+        }
+
+        .user-edit-form .user-edit-teams-field > label {
+            display: block;
+            margin-bottom: var(--wa-space-2xs);
+            font-size: var(--wa-font-size-xs);
+            color: var(--wa-color-text-quiet);
+            font-weight: var(--wa-font-weight-semibold);
+        }
+
+        .user-edit-form .team-selector {
+            position: relative;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        .user-edit-form .team-selector-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: var(--wa-space-s);
+            width: 100%;
+            box-sizing: border-box;
+            padding: var(--wa-space-s) var(--wa-space-m);
+            border-radius: var(--wa-border-radius-m);
+            border: var(--wa-form-control-border-width) var(--wa-form-control-border-style) var(--wa-form-control-border-color);
+            background: var(--wa-form-control-background-color);
+            color: var(--wa-form-control-value-color);
+            font-size: var(--wa-font-size-s);
+            font-family: inherit;
+            cursor: pointer;
+            text-align: left;
+            transition: border-color 140ms ease, box-shadow 140ms ease;
+        }
+
+        .user-edit-form .team-selector-box:hover,
+        .user-edit-form .team-selector-box:focus-visible {
+            outline: none;
+            border-color: color-mix(in srgb, var(--wa-color-brand-fill-loud) 50%, var(--wa-form-control-border-color));
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--wa-color-focus) 35%, transparent);
+        }
+
+        .user-edit-form .team-dropdown-text {
+            flex: 1;
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            text-align: left;
+        }
+
+        .user-edit-form .team-dropdown-chevron {
+            flex-shrink: 0;
+            font-size: var(--wa-font-size-2xs);
+            color: var(--wa-color-text-quiet);
+            transition: transform 160ms ease;
+        }
+
+        .user-edit-form .team-selector:has(.team-dropdown-panel.show) .team-dropdown-chevron {
+            transform: rotate(180deg);
+        }
+
+        .user-edit-form .team-dropdown-panel {
+            display: none;
+            width: 100%;
+            box-sizing: border-box;
+            max-height: 240px;
+            overflow-y: auto;
+            margin-top: var(--wa-space-2xs);
+            padding: var(--wa-space-xs);
+            border-radius: var(--wa-border-radius-m);
+            border: var(--wa-form-control-border-width) var(--wa-form-control-border-style) var(--wa-form-control-border-color);
+            background: var(--wa-color-surface-raised);
+            box-shadow: var(--wa-shadow-m);
+        }
+
+        .user-edit-form .team-dropdown-panel.show {
+            display: block;
+        }
+
+        .user-edit-form .user-edit-teams-field label.team-option {
+            display: flex;
+            align-items: center;
+            gap: var(--wa-space-s);
+            margin-bottom: 0;
+            padding: var(--wa-space-xs) var(--wa-space-s);
+            cursor: pointer;
+            color: var(--wa-color-text-normal);
+            font-weight: var(--wa-font-weight-normal);
+            font-size: var(--wa-font-size-s);
+            border-radius: var(--wa-border-radius-s);
+        }
+
+        .user-edit-form .user-edit-teams-field label.team-option:hover {
+            background: color-mix(in srgb, var(--wa-color-brand-fill-loud) 10%, var(--wa-color-surface-lowered));
+        }
+
+        .user-edit-form .team-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 18px !important;
+            height: 18px !important;
+            min-width: 18px;
+            min-height: 18px;
+            max-width: 18px;
+            max-height: 18px;
+            margin: 0;
+            padding: 0 !important;
+            flex: 0 0 18px;
+            border: 1px solid var(--wa-color-surface-border);
+            border-radius: 4px;
+            background: var(--wa-color-surface-default);
+            cursor: pointer;
+            flex-shrink: 0;
+            box-shadow: none;
+            transition: border-color 120ms ease, background-color 120ms ease, box-shadow 120ms ease;
+        }
+
+        .user-edit-form .team-checkbox:checked {
+            background: var(--wa-color-brand-fill-loud);
+            border-color: var(--wa-color-brand-fill-loud);
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M5 10.5l3.2 3.2L15 7' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: 14px 14px;
+        }
+
+        .user-edit-form .team-checkbox:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--wa-color-brand-fill-loud) 45%, transparent);
+            border-color: var(--wa-color-brand-fill-loud);
+        }
+
+        .user-edit-form .form-actions {
+            margin-top: var(--wa-space-m);
+            padding-top: var(--wa-space-m);
+            border-top: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-surface-border);
         }
 
 

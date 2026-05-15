@@ -3,6 +3,8 @@ package com.management.controllers
 import com.management.repositories.RoleRepository
 import com.management.repositories.UserRepository
 import com.management.services.AdminUserService
+import com.management.services.UserService
+import com.management.services.UserTeamService
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.security.access.prepost.PreAuthorize
@@ -11,8 +13,12 @@ import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
+import com.management.repositories.TeamRepository
+
 
 @Controller
 @RequestMapping("/admin/users")
@@ -20,7 +26,10 @@ import org.springframework.web.bind.annotation.RequestParam
 class AdminUserController(
     private val adminUserService: AdminUserService,
     private val userRepository: UserRepository,
-    private val roleRepository: RoleRepository
+    private val roleRepository: RoleRepository,
+    private val userService: UserService,
+    private val userTeamService: UserTeamService,
+    private val teamRepository: TeamRepository
 ) {
     @GetMapping
     fun usersPage(
@@ -61,8 +70,15 @@ class AdminUserController(
 
         val user = userRepository.findById(id).orElseThrow()
 
+        val selectedTeamIds = user.userTeams
+            .mapNotNull { it.team?.id }
+            .toHashSet()
+
         model.addAttribute("user", user)
         model.addAttribute("roles", roleRepository.findAll())
+        model.addAttribute("teams", teamRepository.findAll())
+        model.addAttribute("selectedTeamIds", selectedTeamIds)
+
 
         return "admin/user-edit"
     }
@@ -73,7 +89,8 @@ class AdminUserController(
         @RequestParam username: String,
         @RequestParam email: String,
         @RequestParam fullName: String,
-        @RequestParam roleId: Long
+        @RequestParam roleId: Long,
+        @RequestParam(required = false) teamIds: Set<Long>?
     ): String {
 
         val user = userRepository.findById(id).orElseThrow()
@@ -90,12 +107,17 @@ class AdminUserController(
         user.role = role
 
         userRepository.save(user)
+        userTeamService.assignTeams(id, teamIds ?: emptySet())
 
         return "redirect:/admin/users"
     }
-    @GetMapping("/admin/users")
-    fun users(): String {
-        return "admin-users :: content"
+
+    @PutMapping(("/{id}/teams"))
+    fun assignTeams(
+        @PathVariable id: Long,
+        @RequestBody teamIds: Set<Long>
+    ) {
+        userTeamService.assignTeams(id, teamIds)
     }
 
 }

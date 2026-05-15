@@ -7,55 +7,73 @@
 
 <div class="dashboard-container">
 
-    <section class="card form-card">
+    <section class="card form-card user-edit-card">
 
-        <header class="page-header">
+        <header class="page-header user-edit-header">
             <h1>Edit User</h1>
-            <p>Update user information</p>
+            <p>Update user information and team assignments.</p>
         </header>
 
         <form th:action="@{'/admin/users/' + ${user.id} + '/info'}"
               method="post"
-              class="entry-form">
+              class="entry-form user-edit-form">
 
             <div class="form-grid">
 
                 <div class="field">
-                    <label>Username</label>
-                    <input type="text" name="username" th:value="${user.username}" required />
+                    <label for="username">Username</label>
+                    <input id="username" type="text" name="username" th:value="${user.username}" required />
                 </div>
 
                 <div class="field">
-                    <label>Email</label>
-                    <input type="email" name="email" th:value="${user.email}" required />
+                    <label for="email">Email</label>
+                    <input id="email" type="email" name="email" th:value="${user.email}" required />
                 </div>
 
                 <div class="field">
-                    <label>Full Name</label>
-                    <input type="text" name="fullName" th:value="${user.fullName}" required />
+                    <label for="fullName">Full Name</label>
+                    <input id="fullName" type="text" name="fullName" th:value="${user.fullName}" required />
                 </div>
 
                 <div class="field">
-                    <label>Role</label>
-                    <select name="roleId" required>
+                    <label for="roleId">Role</label>
+                    <select id="roleId" name="roleId" required>
                         <option th:each="role : ${roles}"
                                 th:value="${role.id}"
                                 th:text="${role.name}"
-                                th:selected="${role.id == user.role.id}">
+                                th:selected="${user.role != null and role.id == user.role.id}">
                         </option>
                     </select>
                 </div>
 
             </div>
 
-            <div class="form-actions">
-                <button type="submit" class="btn-primary">
-                    Save Changes
-                </button>
+            <div class="field user-edit-teams-field">
+                <label>Teams</label>
+                <div class="team-selector">
+                    <button type="button" class="team-selector-box" onclick="toggleTeamDropdown(event)">
+                        <span id="teamDropdownText" class="team-dropdown-text">Select Teams</span>
+                        <i class="fa-solid fa-chevron-down team-dropdown-chevron" aria-hidden="true"></i>
+                    </button>
 
-                <a th:href="@{/admin/users}" class="btn-secondary">
-                    Cancel
-                </a>
+                    <div id="teamDropdownPanel" class="team-dropdown-panel">
+                        <label th:each="team : ${teams}" class="team-option">
+                            <input type="checkbox"
+                                   class="team-checkbox"
+                                   name="teamIds"
+                                   th:value="${team.id}"
+                                   th:checked="${selectedTeamIds != null and #sets.contains(selectedTeamIds, team.id)}"
+                                   onclick="event.stopPropagation()"
+                                   onchange="updateTeamDropdownText()" />
+                            <span th:text="${team.name}">Backend</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Save Changes</button>
+                <a th:href="@{/admin/users}" class="btn-secondary">Cancel</a>
             </div>
 
         </form>
@@ -63,6 +81,35 @@
     </section>
 
 </div>
+
+<script>
+    function toggleTeamDropdown(event) {
+        if (event) {
+            event.stopPropagation();
+        }
+        document.getElementById('teamDropdownPanel').classList.toggle('show');
+    }
+
+    function updateTeamDropdownText() {
+        const checked = document.querySelectorAll('.team-checkbox:checked');
+        const names = Array.from(checked).map(function (cb) {
+            return cb.parentElement.querySelector('span').textContent.trim();
+        });
+        document.getElementById('teamDropdownText').textContent =
+            names.length > 0 ? names.join(', ') : 'Select Teams';
+    }
+
+    document.addEventListener('click', function (event) {
+        const selector = document.querySelector('.user-edit-form .team-selector');
+        const panel = document.getElementById('teamDropdownPanel');
+        if (!selector || !panel) return;
+        if (!selector.contains(event.target)) {
+            panel.classList.remove('show');
+        }
+    });
+
+    window.addEventListener('load', updateTeamDropdownText);
+</script>
 
 </body>
 </html>

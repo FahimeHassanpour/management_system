@@ -40,25 +40,26 @@
     </section>
 
     <!-- USERS TABLE -->
-    <section class="card" style="margin-top: var(--wa-space-m);">
+    <section class="card users-table-card" style="margin-top: var(--wa-space-m);">
 
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:var(--wa-space-s);">
-            <h2 style="margin:0;">Users</h2>
+        <div class="users-table-heading">
+            <h2>Users</h2>
 
-            <p style="margin:0; color: var(--wa-color-text-quiet);"
+            <p class="users-table-count"
                th:text="${totalElements != null ? totalElements + ' user(s)' : (users != null ? #lists.size(users) + ' user(s)' : '0 user(s)')}">
                 0 user(s)
             </p>
         </div>
 
         <div class="table-wrap table-wrap-scroll">
-            <table class="data-table">
+            <table class="data-table users-table">
 
                 <thead>
                 <tr>
                     <th>Full Name</th>
                     <th>Email</th>
                     <th>Role</th>
+                    <th>Teams</th>
                     <th>Action</th>
                 </tr>
                 </thead>
@@ -68,25 +69,33 @@
                 <tr th:each="user : ${users}">
 
                     <!-- FULL NAME -->
-                    <td th:text="${user.fullName}">Full Name</td>
+                    <td class="users-cell-name" th:text="${user.fullName}">Full Name</td>
 
                     <!-- EMAIL -->
-                    <td th:text="${user.email}">Email</td>
+                    <td class="users-cell-email" th:text="${user.email}">Email</td>
 
                     <!-- ROLE -->
                     <td>
-                        <span th:text="${user.role != null ? user.role.name : 'USER'}"
-                              style="display:inline-block; padding:2px 10px; border-radius:999px;
-                                     background:var(--wa-color-surface-lowered);
-                                     border:var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-surface-border);
-                                     font-size:var(--wa-font-size-xs);
-                                     font-weight:var(--wa-font-weight-semibold);">
+                        <span class="role-badge"
+                              th:text="${user.role != null ? user.role.name : 'USER'}"
+                              th:classappend="${user.role != null and user.role.name == 'ADMIN'} ? ' role-admin'
+                                : (${user.role != null and user.role.name == 'MANAGER'} ? ' role-manager' : ' role-user')">
                             USER
                         </span>
                     </td>
 
+                    <td class="users-cell-teams">
+                        <span th:if="${user.userTeams == null or #lists.isEmpty(user.userTeams)}"
+                              class="teams-empty">—</span>
+                        <span th:each="ut : ${user.userTeams}"
+                              th:if="${ut.team != null}"
+                              th:text="${ut.team.name}"
+                              class="team-pill">
+                        </span>
+                    </td>
+
                     <!-- EDIT BUTTON -->
-                    <td>
+                    <td class="users-cell-action">
                         <a th:href="@{'/admin/users/' + ${user.id} + '/edit'}"
                            class="btn-secondary">
                             Edit

@@ -1,6 +1,8 @@
 package com.management.repositories
 
 import com.management.models.User
+import org.springframework.data.domain.Page
+import org.springframework.data.domain.Pageable
 import org.springframework.data.jpa.repository.EntityGraph
 import org.springframework.data.jpa.repository.JpaRepository
 import org.springframework.data.jpa.repository.Query
@@ -14,4 +16,10 @@ interface UserRepository : JpaRepository<User, Long> {
     @EntityGraph(attributePaths = ["role"])
     @Query("SELECT u FROM User u WHERE u.id IN :ids")
     fun findAllWithRolesByIds(@Param("ids") ids: Collection<Long>): List<User>
+
+    @EntityGraph(attributePaths = ["role", "userTeams", "userTeams.team"])
+    override fun findAll(pageable: Pageable): Page<User>
+
+    @EntityGraph(attributePaths = ["role", "userTeams", "userTeams.team"])
+    override fun findById(id: Long): Optional<User>
 }
