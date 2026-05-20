@@ -36,6 +36,10 @@ data class User(
     @Column(nullable = false)
     var password: String = "",
 
+    @Column(name = "profile_image")
+    var profileImage: String? = null,
+
+
     @ManyToOne
     @JoinColumn(name = "role_id")
     var role: Role? = null

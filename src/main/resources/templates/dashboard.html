@@ -19,6 +19,12 @@
     document.addEventListener('DOMContentLoaded', function () {
         const links = document.querySelectorAll('.menu .nav-link');
         const frame = document.querySelector('iframe[name="contentFrame"]');
+        frame.addEventListener("load", function () {
+            const savedTheme = localStorage.getItem("theme") || "dark";
+            if (typeof applyThemeToFrame === "function") {
+                applyThemeToFrame(savedTheme);
+            }
+        });
         if (!frame || links.length === 0) return;
 
         links.forEach(link => {

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      class="wa-theme-awesome wa-brand-blue wa-dark dashboard-fit">
+
+<head th:replace="fragments/head :: commonHead('My Profile')"></head>
+
+<body class="dashboard-body dashboard-body-fit">
+
+<div class="dashboard-container">
+
+    <div th:if="${successMessage}" class="alert alert-success">
+        <span th:text="${successMessage}"></span>
+    </div>
+
+    <section class="card form-card">
+
+        <header class="page-header">
+            <h1>My Profile</h1>
+        </header>
+
+        <form th:action="@{/profile}"
+              method="post"
+              enctype="multipart/form-data"
+              class="entry-form">
+
+            <div class="profile-photo-row">
+                <img th:if="${user.profileImage != null}"
+                     th:src="@{'/uploads/profile-images/' + ${user.profileImage}}"
+                     alt="Profile"
+                     class="profile-photo"/>
+                <div th:unless="${user.profileImage != null}"
+                     class="profile-photo profile-photo-initials"
+                     th:text="${initials}">MM</div>
+                <label class="profile-change-photo">
+                    <input type="file"
+                           name="profileImage"
+                           accept="image/*"
+                           class="profile-file-input"/>
+                    Change photo
+                </label>
+            </div>
+
+            <div class="form-grid">
+                <div class="field">
+                    <label for="username">Username</label>
+                    <input id="username" type="text" name="username" th:value="${user.username}" required/>
+                </div>
+
+                <div class="field">
+                    <label for="fullName">Full name</label>
+                    <input id="fullName" type="text" name="fullName" th:value="${user.fullName}" required/>
+                </div>
+
+                <div class="field">
+                    <label for="email">Email</label>
+                    <input id="email" type="email" th:value="${user.email}" readonly disabled/>
+                </div>
+
+                <div class="field">
+                    <label for="password">New password</label>
+                    <input id="password"
+                           type="password"
+                           name="password"
+                           autocomplete="new-password"
+                           placeholder="Leave blank to keep current"/>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-primary">Save</button>
+            </div>
+        </form>
+
+    </section>
+
+</div>
+
+</body>
+</html>

@@ -183,9 +183,25 @@
         }
 
         .dashboard-container {
-            max-width: 960px;
+            max-width: 1000px;
             margin: var(--wa-space-2xl) auto;
             padding: 0 var(--wa-space-m) var(--wa-space-2xl);
+        }
+
+        /* Compact iframe pages (e.g. profile) — no page scrollbar */
+        html.dashboard-fit,
+        body.dashboard-body.dashboard-body-fit {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body.dashboard-body.dashboard-body-fit {
+            margin: 0;
+        }
+
+        body.dashboard-body.dashboard-body-fit .dashboard-container {
+            margin: var(--wa-space-l) auto;
+            padding: 0 var(--wa-space-m);
         }
 
         .dashboard-header h1 {
@@ -722,6 +738,19 @@
         .menu a:not(.active):hover {
             background: var(--wa-color-surface-lowered);
             border-color: var(--wa-color-surface-border);
+        }
+
+        .sidebar-bottom {
+            margin-top: auto;
+            padding-top: var(--wa-space-l);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--wa-space-s);
+        }
+
+        .sidebar-bottom .theme-switch {
+            margin-top: 0;
         }
 
         .logout a {
@@ -1316,6 +1345,90 @@
             border-top: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-surface-border);
         }
 
+        .theme-switch {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            justify-content: center;
+        }
+
+        .theme-btn {
+            border: none;
+            border-radius: 10px;
+            padding: 10px 14px;
+            cursor: pointer;
+            background: #1f2937;
+            color: white;
+            font-size: 16px;
+        }
+
+        /* Profile page */
+        .profile-photo-row {
+            display: flex;
+            align-items: center;
+            gap: var(--wa-space-m);
+            margin-bottom: var(--wa-space-m);
+        }
+
+        .profile-photo {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-surface-border);
+        }
+
+        .profile-photo-initials {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: var(--wa-font-size-m);
+            font-weight: var(--wa-font-weight-semibold);
+            color: var(--wa-color-brand-on-loud);
+            background: var(--wa-color-brand-fill-loud);
+        }
+
+        .profile-change-photo {
+            font-size: var(--wa-font-size-s);
+            color: var(--wa-color-brand-fill-loud);
+            cursor: pointer;
+        }
+
+        .profile-change-photo:hover {
+            text-decoration: underline;
+        }
+
+        .profile-file-input {
+            display: none;
+        }
 
     </style>
+
+    <script>
+
+        function setDarkMode() {
+
+            document.documentElement.classList.add("wa-dark");
+
+            localStorage.setItem("theme", "dark");
+        }
+
+        function setLightMode() {
+
+            document.documentElement.classList.remove("wa-dark");
+
+            localStorage.setItem("theme", "light");
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+
+            const savedTheme = localStorage.getItem("theme");
+
+            if (savedTheme === "dark") {
+                document.documentElement.classList.add("wa-dark");
+            }
+        });
+
+    </script>
 </head>

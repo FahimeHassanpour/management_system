@@ -2,25 +2,7 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <body>
 
-<!--
-    Reusable Prev / Next pagination bar.
 
-    Caller must build prevUrl and nextUrl with @{...} and pass null when not applicable.
-    Example:
-
-        <div th:replace="~{fragments/pagination :: bar(
-            prevUrl = ${currentPage > 0}
-                ? @{/admin/passwords(page=${currentPage - 1}, size=${size}, query=${query}, categoryId=${categoryId})}
-                : null,
-            nextUrl = ${currentPage < totalPages - 1}
-                ? @{/admin/passwords(page=${currentPage + 1}, size=${size}, query=${query}, categoryId=${categoryId})}
-                : null,
-            currentPage = ${currentPage},
-            totalPages = ${totalPages},
-            totalElements = ${totalElements},
-            itemLabel = 'entries'
-        )}"></div>
--->
 <div th:fragment="bar(prevUrl, nextUrl, currentPage, totalPages, totalElements, itemLabel)"
      class="pagination-bar"
      th:if="${totalElements != null and totalElements > 0}">
