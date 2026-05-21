@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" class="wa-dark">
+<html xmlns:th="http://www.thymeleaf.org" class="wa-theme-awesome wa-brand-blue">
 <head th:replace="fragments/head :: commonHead(#{dashboard.title})"></head>
 
 <body class="dashboard-body dashboard-shell">
@@ -19,13 +19,20 @@
     document.addEventListener('DOMContentLoaded', function () {
         const links = document.querySelectorAll('.menu .nav-link');
         const frame = document.querySelector('iframe[name="contentFrame"]');
-        frame.addEventListener("load", function () {
-            const savedTheme = localStorage.getItem("theme") || "dark";
-            if (typeof applyThemeToFrame === "function") {
+        if (!frame) return;
+
+        frame.addEventListener('load', function () {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            if (typeof applyThemeToFrame === 'function') {
                 applyThemeToFrame(savedTheme);
             }
         });
-        if (!frame || links.length === 0) return;
+
+        if (typeof applyThemeToFrame === 'function') {
+            applyThemeToFrame(localStorage.getItem('theme') || 'dark');
+        }
+
+        if (links.length === 0) return;
 
         links.forEach(link => {
             link.addEventListener('click', function (event) {

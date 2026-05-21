@@ -3,6 +3,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title th:text="${title != null ? title : 'Password Vault'}">Password Vault</title>
+    <script>
+        (function () {
+            var theme = localStorage.getItem('theme') || 'dark';
+            var root = document.documentElement;
+            root.classList.remove('wa-dark', 'wa-light', 'wa-palette-bright', 'wa-palette-default');
+            root.classList.add('wa-theme-awesome', 'wa-brand-blue');
+            if (theme === 'light') {
+                root.classList.add('wa-light', 'wa-palette-bright');
+            } else {
+                root.classList.add('wa-dark');
+            }
+        })();
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/htmx.org@v4.0.0-alpha7/dist/htmx.min.js" crossorigin="anonymous"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function () {
@@ -1406,29 +1419,42 @@
     </style>
 
     <script>
+        function applyTheme(theme, targetDocument) {
+            var doc = targetDocument || document;
+            var root = doc.documentElement;
+            root.classList.remove('wa-dark', 'wa-light', 'wa-palette-bright', 'wa-palette-default');
+            root.classList.add('wa-theme-awesome', 'wa-brand-blue');
+            if (theme === 'light') {
+                root.classList.add('wa-light', 'wa-palette-bright');
+            } else {
+                root.classList.add('wa-dark');
+            }
+        }
 
-        function setDarkMode() {
-
-            document.documentElement.classList.add("wa-dark");
-
-            localStorage.setItem("theme", "dark");
+        function applyThemeToFrame(theme) {
+            var frame = document.querySelector('iframe[name="contentFrame"]');
+            if (!frame) return;
+            try {
+                if (frame.contentDocument) {
+                    applyTheme(theme, frame.contentDocument);
+                }
+            } catch (e) { /* cross-origin */ }
         }
 
         function setLightMode() {
-
-            document.documentElement.classList.remove("wa-dark");
-
-            localStorage.setItem("theme", "light");
+            localStorage.setItem('theme', 'light');
+            applyTheme('light', document);
+            applyThemeToFrame('light');
         }
 
-        document.addEventListener("DOMContentLoaded", () => {
+        function setDarkMode() {
+            localStorage.setItem('theme', 'dark');
+            applyTheme('dark', document);
+            applyThemeToFrame('dark');
+        }
 
-            const savedTheme = localStorage.getItem("theme");
-
-            if (savedTheme === "dark") {
-                document.documentElement.classList.add("wa-dark");
-            }
+        document.addEventListener('DOMContentLoaded', function () {
+            applyTheme(localStorage.getItem('theme') || 'dark', document);
         });
-
     </script>
 </head>
