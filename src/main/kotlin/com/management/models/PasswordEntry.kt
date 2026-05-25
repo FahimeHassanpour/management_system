@@ -4,6 +4,8 @@ import jakarta.persistence.*
 import org.hibernate.envers.Audited
 import org.hibernate.envers.RelationTargetAuditMode
 import java.time.LocalDateTime
+import com.management.models.PasswordEntry
+
 
 @Entity
 @Table(name = "password_entries")
@@ -32,6 +34,7 @@ data class PasswordEntry(
 
     @Column(name = "expiry_date")
     var expiryDate: LocalDateTime? = null,
+
 
 )
 

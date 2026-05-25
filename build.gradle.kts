@@ -52,7 +52,8 @@ dependencies {
 
     implementation("org.hibernate.orm:hibernate-envers")
     implementation("com.github.librepdf:openpdf:3.0.3")
-}
+
+    implementation("org.apache.poi:poi-ooxml:5.4.1") }
 
 kotlin {
     compilerOptions {

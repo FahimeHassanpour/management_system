@@ -7,6 +7,7 @@ import com.management.repositories.UserRepository
 import com.management.services.AssignmentService
 import com.management.services.PasswordEntryService
 import com.management.util.PasswordExpiry
+import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
@@ -16,8 +17,14 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
+import org.springframework.web.multipart.MultipartFile
 import java.time.format.DateTimeFormatter
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
+import org.springframework.http.HttpHeaders
+import org.springframework.http.MediaType
+import java.time.LocalDateTime
+
+
 
 @Controller
 @RequestMapping("/admin/passwords")
@@ -139,6 +146,49 @@ class AdminPasswordController(
         val entriesPage = passwordEntryService.list(query, normalizedCategoryId, page, size)
         populatePasswordListModel(model, entriesPage, page, size, query, normalizedCategoryId)
         return "admin/password-list :: content"
+    }
+
+    @PostMapping("/import")
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
+    fun importPasswords(
+        @RequestParam("file") file: MultipartFile,
+        redirectAttributes: RedirectAttributes
+    ): String {
+        return try {
+            val count = passwordEntryService.importExcel(file)
+            redirectAttributes.addFlashAttribute(
+                "successMessage",
+                "Imported $count password(s) from Excel."
+            )
+            "redirect:/admin/passwords"
+        } catch (ex: Exception) {
+            redirectAttributes.addFlashAttribute(
+                "errorMessage",
+                ex.message ?: "Import failed."
+            )
+            "redirect:/admin/passwords"
+        }
+    }
+
+    @GetMapping("/export")
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
+    fun exportPasswords(
+        @RequestParam(required = false) query: String?,
+        @RequestParam(required = false) categoryId: Long?
+    ): ResponseEntity<ByteArray> {
+        val normalizedCategoryId = categoryId?.takeIf { it != 0L }
+        val entries = passwordEntryService.listForExport(query, normalizedCategoryId)
+        val bytes = passwordEntryService.exportExcel(entries)
+        val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"))
+        val filename = "passwords-$timestamp.xlsx"
+        return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"$filename\"")
+            .contentType(
+                MediaType.parseMediaType(
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+            )
+            .body(bytes)
     }
 
 

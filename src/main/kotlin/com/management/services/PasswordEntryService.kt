@@ -11,6 +11,12 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeParseException
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageRequest
+import com.management.models.Category
+import org.apache.poi.ss.usermodel.DataFormatter
+import org.apache.poi.ss.usermodel.WorkbookFactory
+import org.springframework.web.multipart.MultipartFile
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import java.io.ByteArrayOutputStream
 
 @Service
 class PasswordEntryService(
@@ -19,6 +25,7 @@ class PasswordEntryService(
     private val assignmentRepository: AssignmentRepository,
     private val emailService: EmailService
 ) {
+    private val cellFormatter = DataFormatter()
     fun list(
         query: String?,
         categoryId: Long?,
@@ -93,7 +100,109 @@ class PasswordEntryService(
         } catch (ex: DateTimeParseException) {
             throw RuntimeException("Invalid expiry date format: $raw")
         }
+
     }
 
+    fun importExcel(file: MultipartFile): Int {
+        require(!file.isEmpty) { "Please choose an Excel file." }
 
+        val workbook = WorkbookFactory.create(file.inputStream)
+        try {
+            val sheet = workbook.getSheetAt(0)
+                ?: throw IllegalArgumentException("Excel file has no sheets.")
+
+            if (sheet.lastRowNum < 1) {
+                throw IllegalArgumentException("Excel file has no data rows.")
+            }
+
+            var imported = 0
+            for (i in 1..sheet.lastRowNum) {
+                val row = sheet.getRow(i) ?: continue
+
+                val title = cellValue(row.getCell(0))
+                val username = cellValue(row.getCell(1))
+                val password = cellValue(row.getCell(2))
+
+                if (title.isBlank() && username.isBlank() && password.isBlank()) {
+                    continue
+                }
+
+                require(title.isNotBlank()) { "Row ${i + 1}: title is required." }
+                require(username.isNotBlank()) { "Row ${i + 1}: username is required." }
+                require(password.isNotBlank()) { "Row ${i + 1}: password is required." }
+
+                val categoryName = cellValue(row.getCell(3))
+                val category = categoryName.takeIf { it.isNotBlank() }?.let { name ->
+                    categoryRepository.findByName(name.trim()).orElseGet {
+                        categoryRepository.save(Category(name = name.trim()))
+                    }
+                }
+
+                val expiryDate = cellValue(row.getCell(4))
+                    .takeIf { it.isNotBlank() }
+                    ?.let { parseExpiryDate(it) }
+
+                passwordEntryRepository.save(
+                    PasswordEntry(
+                        title = title.trim(),
+                        username = username.trim(),
+                        password = password,
+                        category = category,
+                        expiryDate = expiryDate
+                    )
+                )
+                imported++
+            }
+
+            if (imported == 0) {
+                throw IllegalArgumentException("No valid rows found to import.")
+            }
+
+            return imported
+        } finally {
+            workbook.close()
+        }
+    }
+
+    private fun cellValue(cell: org.apache.poi.ss.usermodel.Cell?): String {
+        if (cell == null) return ""
+        return cellFormatter.formatCellValue(cell).trim()
+    }
+
+    fun listForExport(query: String?, categoryId: Long?): List<PasswordEntry> {
+        return passwordEntryRepository.search(
+            query,
+            categoryId,
+            PageRequest.of(0, Int.MAX_VALUE)
+        ).content
+    }
+
+    fun exportExcel(entries: List<PasswordEntry>): ByteArray {
+        val workbook = XSSFWorkbook()
+        val sheet = workbook.createSheet("Passwords")
+        val dateFormatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd")
+
+        val headers = listOf("Title", "Username", "Password", "Category", "Expiry")
+        val headerRow = sheet.createRow(0)
+        headers.forEachIndexed { index, title ->
+            headerRow.createCell(index).setCellValue(title)
+        }
+
+        entries.forEachIndexed { index, entry ->
+            val row = sheet.createRow(index + 1)
+            row.createCell(0).setCellValue(entry.title)
+            row.createCell(1).setCellValue(entry.username)
+            row.createCell(2).setCellValue(entry.password)
+            row.createCell(3).setCellValue(entry.category?.name ?: "")
+            row.createCell(4).setCellValue(
+                entry.expiryDate?.toLocalDate()?.format(dateFormatter) ?: ""
+            )
+        }
+
+        return ByteArrayOutputStream().use { output ->
+            workbook.write(output)
+            workbook.close()
+            output.toByteArray()
+        }
+    }
 }
