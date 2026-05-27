@@ -8,6 +8,7 @@ import com.management.repositories.UserRepository
 import com.management.services.AssignmentService
 import com.management.services.PasswordEntryService
 import com.management.util.PasswordExpiry
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
@@ -23,6 +24,7 @@ import java.time.format.DateTimeFormatter
 import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
+import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
 
 
@@ -158,26 +160,36 @@ class AdminPasswordController(
         return "admin/password-list :: content"
     }
 
-    @PostMapping("/import")
-    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
-    fun importPasswords(
-        @RequestParam("file") file: MultipartFile,
-        redirectAttributes: RedirectAttributes
-    ): String {
-        return try {
-            val count = passwordEntryService.importExcel(file)
-            redirectAttributes.addFlashAttribute(
-                "successMessage",
-                "Imported $count password(s) from Excel."
+    @GetMapping("/template")
+    fun downloadTemplate(): ResponseEntity<ByteArray> {
+
+        val workbook = XSSFWorkbook()
+        val sheet = workbook.createSheet("Passwords")
+
+        val header = sheet.createRow(0)
+
+        header.createCell(0).setCellValue("Title")
+        header.createCell(1).setCellValue("Username")
+        header.createCell(2).setCellValue("Password")
+        header.createCell(3).setCellValue("Category")
+        header.createCell(4).setCellValue("Expiry Date")
+
+        val output = ByteArrayOutputStream()
+
+        workbook.write(output)
+        workbook.close()
+
+        return ResponseEntity.ok()
+            .header(
+                HttpHeaders.CONTENT_DISPOSITION,
+                "attachment; filename=password-template.xlsx"
             )
-            "redirect:/admin/passwords"
-        } catch (ex: Exception) {
-            redirectAttributes.addFlashAttribute(
-                "errorMessage",
-                ex.message ?: "Import failed."
+            .contentType(
+                MediaType.parseMediaType(
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
             )
-            "redirect:/admin/passwords"
-        }
+            .body(output.toByteArray())
     }
 
     @GetMapping("/export")
