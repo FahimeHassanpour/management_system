@@ -3,6 +3,7 @@ package com.management.controllers
 import com.management.dto.PasswordEntryRequest
 import com.management.models.PasswordEntry
 import com.management.repositories.CategoryRepository
+import com.management.repositories.TeamRepository
 import com.management.repositories.UserRepository
 import com.management.services.AssignmentService
 import com.management.services.PasswordEntryService
@@ -32,7 +33,8 @@ class AdminPasswordController(
     private val passwordEntryService: PasswordEntryService,
     private val categoryRepository: CategoryRepository,
     private val assignmentService: AssignmentService,
-    private val userRepository: UserRepository
+    private val userRepository: UserRepository,
+    private val teamRepository: TeamRepository
 ) {
     private val dtFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     private val privilegedRoles = setOf("ADMIN", "MANAGER")
@@ -60,11 +62,14 @@ class AdminPasswordController(
     @GetMapping("/new")
     @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     fun createForm(model: Model): String {
+        
         model.addAttribute("entryRequest", PasswordEntryRequest("", "", ""))
         model.addAttribute("categories", categoryRepository.findAll())
         model.addAttribute("users", assignableUsers())
         model.addAttribute("selectedUserIds", emptySet<Long>())
         model.addAttribute("isEdit", false)
+        model.addAttribute("teams", teamRepository.findAll())
+
         return "admin/password-form"
     }
 
@@ -73,6 +78,7 @@ class AdminPasswordController(
     fun editForm(@PathVariable id: Long, model: Model): String {
         val entry: PasswordEntry = passwordEntryService.getById(id)
         val selectedUserIds = assignmentService.assignedUserIdsForEntry(id)
+        val selectedTeamIds = passwordEntryService.findTeamIdsForPassword(id)
 
         model.addAttribute(
             "entryRequest",
@@ -83,14 +89,19 @@ class AdminPasswordController(
                 description = entry.description,
                 categoryId = entry.category?.id,
                 userIds = selectedUserIds.toList(),
-                expiryDate = entry.expiryDate?.format(dtFormatter)
+                expiryDate = entry.expiryDate?.format(dtFormatter),
+                teamIds = selectedTeamIds.toList()
             )
         )
         model.addAttribute("entryId", id)
         model.addAttribute("categories", categoryRepository.findAll())
         model.addAttribute("users", assignableUsers())
         model.addAttribute("selectedUserIds", selectedUserIds)
+        model.addAttribute("selectedTeamIds", selectedTeamIds)
         model.addAttribute("isEdit", true)
+        model.addAttribute("teams", teamRepository.findAll()
+        )
+
         return "admin/password-form"
     }
 
@@ -130,7 +141,6 @@ class AdminPasswordController(
             roleName == null || roleName !in privilegedRoles
         }
 
-    /** Single string per entry for data-users (avoids commas inside th:attr / #strings.listJoin in HTML). */
     private fun joinedUserLabels(entryUsers: Map<Long, List<String>>): Map<Long, String> =
         entryUsers.mapValues { (_, labels) -> labels.joinToString("||") }
 
@@ -205,7 +215,7 @@ class AdminPasswordController(
         val entryUsers: Map<Long, List<String>> = entries
             .mapNotNull { entry ->
                 val entryId = entry.id ?: return@mapNotNull null
-                val userIds = assignmentService.assignedUserIdsForEntry(entryId)
+                val userIds = assignmentService.assignedUserIdsForEntryIncludingTeams(entryId)
                 val users = if (userIds.isEmpty()) {
                     emptyList()
                 } else {
@@ -233,4 +243,5 @@ class AdminPasswordController(
         model.addAttribute("categories", categoryRepository.findAll())
         model.addAttribute("categoryId", normalizedCategoryId)
     }
+
 }

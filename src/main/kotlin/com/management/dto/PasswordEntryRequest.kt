@@ -7,5 +7,6 @@ data class PasswordEntryRequest(
     val description: String = "",
     val categoryId: Long? = null,
     val userIds: List<Long> = emptyList(),
-    val expiryDate: String? = null
+    val expiryDate: String? = null,
+    var teamIds: List<Long> = emptyList()
 )

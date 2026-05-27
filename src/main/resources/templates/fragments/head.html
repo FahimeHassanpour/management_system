@@ -415,7 +415,51 @@
             max-width: 11rem;
         }
 
-        /* Match default button proportions to the search field (same row, not shorter than inputs). */
+        .passwords-table-toolbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: var(--wa-space-m);
+            flex-wrap: wrap;
+            margin-bottom: var(--wa-space-s);
+        }
+
+        .passwords-filter-form {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--wa-space-xs);
+            margin: 0;
+            flex: 0 1 auto;
+        }
+
+        .passwords-filter-label {
+            font-size: var(--wa-font-size-xs);
+            color: var(--wa-color-text-quiet);
+            white-space: nowrap;
+            /* NO width: 100% here */
+        }
+
+        .passwords-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: var(--wa-space-xs);
+            flex-shrink: 0;
+            margin-left: auto; /* pushes group to the right */
+        }
+
+        .passwords-actions .btn-primary,
+        .passwords-actions .btn-secondary,
+        .passwords-actions .import-excel-btn {
+            margin: 0;
+            white-space: nowrap;
+        }
+
+        .passwords-actions .toolbar-import {
+            display: inline-flex;
+            align-items: center;
+            margin: 0;
+        }
+
         .toolbar .btn-primary,
         .toolbar .btn-secondary {
             box-sizing: border-box;
@@ -572,6 +616,11 @@
             position: relative;
         }
 
+        /* Space between teams dropdown block and "Users with access" on password form */
+        .entry-form .category-field .user-select-dropdown + label {
+            margin-top: var(--wa-space-l);
+        }
+
         .user-dropdown-toggle {
             display: flex;
             align-items: center;
@@ -605,6 +654,10 @@
             border: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-surface-border);
             border-radius: var(--wa-border-radius-m);
             box-shadow: var(--wa-shadow-l);
+        }
+
+        .user-dropdown-panel.show {
+            display: block;
         }
 
         .user-dropdown-list {
@@ -1089,14 +1142,14 @@
         }
 
 
-        /* —— User management table (appearance only) —— */
+        /* —— User management table: no boxed frame above header row —— */
         .users-table-card .users-table-heading {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: var(--wa-space-m);
-            padding-bottom: var(--wa-space-s);
-            border-bottom: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-surface-border);
+            padding-bottom: 0;
+            border-bottom: none;
         }
 
         .users-table-card .users-table-heading h2 {
@@ -1113,27 +1166,68 @@
             font-weight: var(--wa-font-weight-semibold);
             color: var(--wa-color-text-quiet);
             background: var(--wa-color-surface-lowered);
-            border: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-surface-border);
+            border: none;
         }
 
+        /* No tinted “card inside card” rectangle around thead / Full name row */
         .users-table-card .table-wrap {
-            border-radius: var(--wa-border-radius-m);
-            border: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-surface-border);
-            background: color-mix(in srgb, var(--wa-color-surface-lowered) 40%, transparent);
-            overflow: hidden;
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            background: transparent !important;
+            border-radius: 0;
+            overflow: visible;
+        }
+
+        table.data-table.users-table {
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            border-collapse: separate;
+            border-spacing: 0;
+        }
+
+        table.data-table.users-table thead th {
+            border: none !important;
+            border-width: 0 !important;
+            outline: none !important;
+            box-shadow: none !important;
+        }
+
+        table.data-table.users-table tbody td {
+            outline: none !important;
+            box-shadow: none !important;
+            border-top: none !important;
+            border-left: none !important;
+            border-right: none !important;
+            border-bottom: var(--wa-border-width-s) var(--wa-border-style)
+                color-mix(in srgb, var(--wa-color-surface-border) 70%, transparent) !important;
+        }
+
+        table.data-table.users-table tbody tr:last-child td {
+            border-bottom: none !important;
+        }
+
+        table.data-table.users-table thead tr,
+        table.data-table.users-table tbody tr {
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
         }
 
         .data-table.users-table thead th {
-            padding: var(--wa-space-xs) var(--wa-space-s);
-            background: color-mix(in srgb, var(--wa-color-surface-lowered) 85%, transparent);
-            border-bottom: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-surface-border);
+            padding: var(--wa-space-xs) var(--wa-space-s) var(--wa-space-m);
+            background: transparent;
+            border: none !important;
             font-size: var(--wa-font-size-2xs);
             font-weight: var(--wa-font-weight-semibold);
             letter-spacing: 0.06em;
+            color: var(--wa-color-text-quiet);
+            text-transform: uppercase;
         }
 
         .data-table.users-table tbody tr {
-            transition: background-color 160ms ease, box-shadow 160ms ease;
+            transition: background-color 160ms ease;
         }
 
         .data-table.users-table tbody tr:hover {
@@ -1142,12 +1236,6 @@
 
         .data-table.users-table tbody td {
             padding: var(--wa-space-m) var(--wa-space-s);
-            border-bottom: var(--wa-border-width-s) var(--wa-border-style)
-                color-mix(in srgb, var(--wa-color-surface-border) 70%, transparent);
-        }
-
-        .data-table.users-table tbody tr:last-child td {
-            border-bottom: none;
         }
 
         .data-table.users-table .users-cell-name {
@@ -1450,45 +1538,207 @@
             display: none;
         }
 
+        .theme-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .theme-btn.dark-theme-btn {
+            background: #1f2937;
+            color: white;
+        }
+
+        .theme-btn.light-theme-btn {
+            background: #ffffff;
+            color: #333;
+            border: 1px solid #d1d5db;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+
+        .modal{
+            display:none;
+            position:fixed;
+            inset:0;
+            background:rgba(0,0,0,.45);
+            justify-content:center;
+            align-items:center;
+            z-index:999;
+        }
+
+        .modal-content{
+            background:var(--wa-color-surface-default);
+            padding:24px;
+            border-radius:12px;
+            display:flex;
+            flex-direction:column;
+            gap:12px;
+            min-width:320px;
+        }
+
+        .team-dropdown{
+            position:relative;
+        }
+
+        .team-dropdown-menu{
+            display:none;
+
+            position:absolute;
+
+            background:var(--wa-color-surface-default);
+
+            border:1px solid #ddd;
+
+            border-radius:8px;
+
+            padding:10px;
+
+            width:220px;
+
+            max-height:200px;
+
+            overflow:auto;
+
+            z-index:100;
+        }
+
+        .team-option{
+            display:flex;
+
+            gap:8px;
+
+            padding:6px;
+        }
+
+
     </style>
 
     <script>
         function applyTheme(theme, targetDocument) {
             var doc = targetDocument || document;
             var root = doc.documentElement;
-            root.classList.remove('wa-dark', 'wa-light', 'wa-palette-bright', 'wa-palette-default');
-            root.classList.add('wa-theme-awesome', 'wa-brand-blue');
+
+            root.classList.remove(
+                'wa-dark',
+                'wa-light',
+                'wa-palette-bright',
+                'wa-palette-default'
+            );
+
+            root.classList.add(
+                'wa-theme-awesome',
+                'wa-brand-blue'
+            );
+
             if (theme === 'light') {
-                root.classList.add('wa-light', 'wa-palette-bright');
+                root.classList.add(
+                    'wa-light',
+                    'wa-palette-bright'
+                );
             } else {
                 root.classList.add('wa-dark');
             }
+
+            updateThemeButton(theme);
         }
 
         function applyThemeToFrame(theme) {
-            var frame = document.querySelector('iframe[name="contentFrame"]');
+            var frame =
+                document.querySelector(
+                    'iframe[name="contentFrame"]'
+                );
+
             if (!frame) return;
+
             try {
                 if (frame.contentDocument) {
-                    applyTheme(theme, frame.contentDocument);
+                    applyTheme(
+                        theme,
+                        frame.contentDocument
+                    );
                 }
-            } catch (e) { /* cross-origin */ }
+            } catch (e) {}
         }
 
-        function setLightMode() {
-            localStorage.setItem('theme', 'light');
-            applyTheme('light', document);
-            applyThemeToFrame('light');
+        function toggleTheme() {
+
+            var currentTheme =
+                localStorage.getItem('theme')
+                || 'dark';
+
+            var newTheme =
+                currentTheme === 'dark'
+                    ? 'light'
+                    : 'dark';
+
+            localStorage.setItem(
+                'theme',
+                newTheme
+            );
+
+            applyTheme(
+                newTheme,
+                document
+            );
+
+            applyThemeToFrame(
+                newTheme
+            );
         }
 
-        function setDarkMode() {
-            localStorage.setItem('theme', 'dark');
-            applyTheme('dark', document);
-            applyThemeToFrame('dark');
+        function updateThemeButton(theme) {
+
+            var button =
+                document.getElementById(
+                    'themeToggle'
+                );
+
+            if (!button) return;
+
+            button.classList.remove(
+                'dark-theme-btn',
+                'light-theme-btn'
+            );
+
+            if (theme === 'dark') {
+
+                button.innerHTML = '🌙';
+
+                button.classList.add(
+                    'dark-theme-btn'
+                );
+
+            } else {
+
+                button.innerHTML = '☀️';
+
+                button.classList.add(
+                    'light-theme-btn'
+                );
+            }
         }
 
-        document.addEventListener('DOMContentLoaded', function () {
-            applyTheme(localStorage.getItem('theme') || 'dark', document);
-        });
+        document.addEventListener(
+            'DOMContentLoaded',
+            function () {
+
+                var theme =
+                    localStorage.getItem('theme')
+                    || 'dark';
+
+                applyTheme(
+                    theme,
+                    document
+                );
+
+                applyThemeToFrame(
+                    theme
+                );
+            }
+        );
     </script>
 </head>

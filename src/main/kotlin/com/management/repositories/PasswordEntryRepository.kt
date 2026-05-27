@@ -17,6 +17,7 @@ interface PasswordEntryRepository : JpaRepository<PasswordEntry, Long> {
           AND (:categoryId IS NULL OR p.category.id = :categoryId)
         """
     )
+
     fun search(
         @Param("query") query: String?,
         @Param("categoryId") categoryId: Long?,
@@ -24,4 +25,10 @@ interface PasswordEntryRepository : JpaRepository<PasswordEntry, Long> {
     ): Page<PasswordEntry>
 
     fun countByCategoryId(categoryId: Long): Long
+
+
+    fun existsByTitleAndUsername(
+        title: String,
+        username: String
+    ): Boolean
 }

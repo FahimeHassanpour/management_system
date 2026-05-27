@@ -31,7 +31,7 @@ class UserPasswordController(
     ): String {
 
         val username = authentication.name
-        val assignedIds = assignmentService.assignedEntryIdsForUsername(username)
+        val assignedIds = assignmentService.assignedEntryIdsForUsernameIncludingTeams(username)
 
         val normalizedCategoryId = categoryId?.takeIf { it != 0L }
 
@@ -70,7 +70,7 @@ class UserPasswordController(
         model: Model
     ): String {
         val username = authentication.name
-        if (!assignmentService.isAssignedToUser(id, username)) {
+        if (!assignmentService.isAssignedToUserIncludingTeams(id, username)) {
             throw AccessDeniedException("You are not allowed to view this password.")
         }
 
