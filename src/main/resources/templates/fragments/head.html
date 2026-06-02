@@ -1615,6 +1615,196 @@
         }
 
 
+        .import-popup-wrapper {
+            position: relative;
+        }
+
+        .import-popup {
+            display: none;
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--wa-color-surface-raised);
+            border: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-surface-border);
+            border-radius: 12px;
+            padding: var(--wa-space-s);
+            box-shadow: var(--wa-shadow-l);
+            z-index: 1000;
+            flex-direction: column;
+            gap: var(--wa-space-xs);
+            min-width: 260px;
+        }
+
+        .import-popup-title {
+            margin: 0;
+            font-size: var(--wa-font-size-s);
+            font-weight: var(--wa-font-weight-semibold);
+            color: var(--wa-color-text-normal);
+        }
+
+        .import-popup-subtitle {
+            margin: 0 0 var(--wa-space-xs);
+            font-size: var(--wa-font-size-xs);
+            color: var(--wa-color-text-quiet);
+            line-height: 1.35;
+        }
+
+        .popup-btn {
+            width: 100%;
+            justify-content: flex-start;
+        }
+
+        .profile-popup-wrapper {
+            position: relative;
+        }
+
+        .profile-icon-btn {
+            width: 42px;
+            height: 42px;
+
+            border: none;
+            border-radius: 50%;
+
+            cursor: pointer;
+
+            font-size: 20px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: white;
+
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+
+            transition: 0.2s;
+        }
+
+        .profile-icon-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .profile-popup {
+            display: none;
+
+            position: absolute;
+
+            top: 50px;
+            right: 0;
+
+            width: 240px;
+
+            background: white;
+
+            border-radius: 16px;
+
+            padding: 16px;
+
+            box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+
+            border: 1px solid #e5e7eb;
+
+            z-index: 1000;
+        }
+        .profile-popup {
+            display: none;
+        }
+
+        .profile-popup-wrapper {
+
+            position: relative;
+
+            display: inline-block;
+        }
+
+        .profile-icon-btn {
+
+            width: 42px;
+            height: 42px;
+
+            border: none;
+
+            border-radius: 50%;
+
+            cursor: pointer;
+
+            font-size: 20px;
+
+            background: white;
+
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .profile-popup {
+
+            display: none;
+
+            position: absolute;
+
+            bottom: calc(100% + 8px);
+
+            right: 0;
+
+            width: 220px;
+
+            background: white;
+
+            border-radius: 14px;
+
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+
+            border: 1px solid #ddd;
+
+            overflow: hidden;
+
+            z-index: 99999;
+        }
+
+        .profile-popup.show {
+            display: block !important;
+        }
+
+        /* Final sidebar override: keep profile popup visible inside sidebar */
+        .sidebar .sidebar-bottom .profile-popup-wrapper .profile-popup {
+            top: auto !important;
+            left: calc(100% + 6px) !important;
+            right: auto !important;
+            bottom: 0 !important;
+            transform: none !important;
+            min-width: 170px;
+            max-width: 190px;
+            padding: 4px;
+            border-radius: var(--wa-border-radius-m);
+            border: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-surface-border);
+            background: var(--wa-color-surface-raised);
+            box-shadow: var(--wa-shadow-l);
+            overflow: hidden;
+        }
+
+        .popup-item {
+            width: 100%;
+            display: block;
+            padding: 8px 10px;
+            text-decoration: none;
+            border: none;
+            border-radius: var(--wa-border-radius-s);
+            background: transparent;
+            cursor: pointer;
+            text-align: left;
+            font-size: var(--wa-font-size-xs);
+            color: var(--wa-color-text-normal);
+        }
+
+        .popup-item:hover {
+            background: var(--wa-color-surface-lowered);
+        }
+
+        .logout-item {
+            color: var(--wa-color-danger-on-normal);
+        }
+
+
     </style>
 
     <script>
@@ -1740,5 +1930,7 @@
                 );
             }
         );
+
+
     </script>
 </head>

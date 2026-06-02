@@ -28,23 +28,43 @@
                 User management
             </a>
 
-            <a th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
-               th:href="@{/admin/audit}"
-               th:classappend="${active == 'audit'} ? 'active'"
-               class="nav-link">
-                Audit logs
-            </a>
-
-            <a th:href="@{/profile}"
-               th:classappend="${active == 'profile'} ? 'active'"
-               class="nav-link">
-                Profile
-            </a>
         </nav>
 
         <div class="sidebar-bottom">
-            <div class="logout">
-                <a th:href="@{/logout}">Logout</a>
+            <div class="profile-popup-wrapper">
+
+                <button type="button"
+                        class="profile-icon-btn"
+                        aria-haspopup="true"
+                        aria-expanded="false">
+
+                    👤
+
+                </button>
+
+                <div class="profile-popup"
+                     aria-hidden="true">
+
+                    <a href="/profile"
+                       target="contentFrame"
+                       class="popup-item">
+                        Profile Settings
+                    </a>
+
+                    <form th:action="@{/logout}"
+                          method="post">
+
+                        <button type="submit"
+                                class="popup-item logout-item">
+
+                            Logout
+
+                        </button>
+
+                    </form>
+
+                </div>
+
             </div>
             <div class="theme-switch">
                 <button type="button"
@@ -57,6 +77,53 @@
         </div>
 
     </aside>
+    <script>
+        (function () {
+            function initProfilePopup() {
+                var wrapper = document.querySelector('.profile-popup-wrapper');
+                if (!wrapper) return;
+                var toggle = wrapper.querySelector('.profile-icon-btn');
+                var popup = wrapper.querySelector('.profile-popup');
+
+                if (!wrapper || !toggle || !popup) return;
+                if (wrapper.dataset.profilePopupInit === 'true') return;
+                wrapper.dataset.profilePopupInit = 'true';
+
+                function closePopup() {
+                    popup.classList.remove('show');
+                    popup.setAttribute('aria-hidden', 'true');
+                    toggle.setAttribute('aria-expanded', 'false');
+                }
+
+                function openPopup() {
+                    popup.classList.add('show');
+                    popup.setAttribute('aria-hidden', 'false');
+                    toggle.setAttribute('aria-expanded', 'true');
+                }
+
+                toggle.addEventListener('click', function (event) {
+                    event.stopPropagation();
+                    if (popup.classList.contains('show')) {
+                        closePopup();
+                        return;
+                    }
+                    openPopup();
+                });
+
+                document.addEventListener('click', function (event) {
+                    if (!wrapper.contains(event.target)) {
+                        closePopup();
+                    }
+                });
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', initProfilePopup);
+            } else {
+                initProfilePopup();
+            }
+        })();
+    </script>
 </div>
 
 </body>
