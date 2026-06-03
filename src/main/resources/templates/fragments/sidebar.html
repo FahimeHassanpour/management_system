@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.w3.org/1999/xhtml">
 
 <body>
 
@@ -26,6 +26,13 @@
                th:classappend="${active == 'users'} ? 'active'"
                class="nav-link">
                 User management
+            </a>
+
+            <a sec:authorize="hasAnyRole('ADMIN','MANAGER')"
+               th:href="@{/admin/reports/user-access}"
+               th:classappend="${active == 'reports'} ? 'active'"
+               class="nav-link">
+                Reports
             </a>
 
         </nav>

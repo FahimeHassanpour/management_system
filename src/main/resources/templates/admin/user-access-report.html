@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      class="wa-theme-awesome wa-palette-bright wa-brand-blue">
+
+<head th:replace="~{fragments/head :: commonHead('User Access Report')}"></head>
+
+<div class="dashboard-container">
+
+    <header class="page-header">
+        <h1>Reports</h1>
+        <p>Select a user to see all password entries they can access (direct + team access).</p>
+    </header>
+
+    <section class="card report-card">
+        <form method="post" th:action="@{/admin/reports/user-access}">
+            <div class="report-toolbar">
+                <select class="toolbar-input" name="userId" required>
+                    <option value="" th:selected="${selectedUser == null}">Select User</option>
+                    <option
+                        th:each="user : ${users}"
+                        th:value="${user.id}"
+                        th:text="${user.username}"
+                        th:selected="${selectedUser != null and user.id == selectedUser.id}">
+                    </option>
+                </select>
+
+                <button type="submit" class="btn-primary">
+                    Generate Report
+                </button>
+            </div>
+
+            <div th:if="${selectedUser != null}" class="report-summary">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap: var(--wa-space-s); flex-wrap: wrap;">
+                    <h2 style="margin:0;">
+                        User:
+                        <span th:text="${selectedUser.username}"></span>
+                    </h2>
+
+                    <div class="summary-card">
+                        <span class="summary-value"
+                              th:text="${passwords != null ? #lists.size(passwords) : 0}">0</span>
+                        <span class="summary-label">entries</span>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <div th:if="${selectedUser != null}" style="margin-top: var(--wa-space-s);">
+            <div th:if="${passwords == null or #lists.isEmpty(passwords)}" class="alert" style="margin: 0;">
+                No passwords found for this user.
+            </div>
+
+            <div th:if="${passwords != null and !#lists.isEmpty(passwords)}" class="table-wrap table-wrap-scroll">
+                <table class="data-table">
+                    <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Username</th>
+                        <th>Category</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    <tr th:each="password : ${passwords}">
+                        <td th:text="${password.title}"></td>
+                        <td th:text="${password.username}"></td>
+                        <td th:text="${password.category?.name != null ? password.category.name : '—'}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </section>
+
+</div>
+
+</html>
