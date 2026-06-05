@@ -192,6 +192,32 @@ class AdminPasswordController(
             .body(output.toByteArray())
     }
 
+    @PostMapping("/import")
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
+    fun importPasswords(
+        @RequestParam("file") file: MultipartFile,
+        redirectAttributes: RedirectAttributes
+    ): String {
+        return try {
+            val imported = passwordEntryService.importExcel(file)
+            redirectAttributes.addFlashAttribute(
+                "successMessage",
+                if (imported > 0) {
+                    "Imported $imported password entr${if (imported == 1) "y" else "ies"} from Excel."
+                } else {
+                    "No new password entries were imported. Rows may be empty, invalid, or already exist."
+                }
+            )
+            "redirect:/admin/passwords"
+        } catch (ex: Exception) {
+            redirectAttributes.addFlashAttribute(
+                "errorMessage",
+                ex.message ?: "Failed to import Excel file."
+            )
+            "redirect:/admin/passwords"
+        }
+    }
+
     @GetMapping("/export")
     @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     fun exportPasswords(
