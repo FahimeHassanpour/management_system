@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
-      class="wa-theme-awesome wa-brand-blue dashboard-fit">
+      class="wa-theme-awesome wa-palette-bright wa-brand-blue dashboard-fit">
 
 <head th:replace="fragments/head :: commonHead('My Profile')"></head>
 
@@ -10,6 +10,9 @@
 
     <div th:if="${successMessage}" class="alert alert-success">
         <span th:text="${successMessage}"></span>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger">
+        <span th:text="${errorMessage}"></span>
     </div>
 
     <section class="card form-card">
@@ -42,11 +45,6 @@
 
             <div class="form-grid">
                 <div class="field">
-                    <label for="username">Username</label>
-                    <input id="username" type="text" name="username" th:value="${user.username}" required/>
-                </div>
-
-                <div class="field">
                     <label for="fullName">Full name</label>
                     <input id="fullName" type="text" name="fullName" th:value="${user.fullName}" required/>
                 </div>
@@ -57,14 +55,46 @@
                 </div>
 
                 <div class="field">
-                    <label for="password">New password</label>
-                    <input id="password"
-                           type="password"
-                           name="password"
-                           autocomplete="new-password"
-                           placeholder="Leave blank to keep current"/>
+                    <label for="username">Username</label>
+                    <input id="username" type="text" name="username" th:value="${user.username}" required/>
                 </div>
             </div>
+
+            <section class="user-edit-teams-field" style="margin-top: var(--wa-space-l);">
+                <h2 style="margin: 0 0 var(--wa-space-s);">Change password</h2>
+                <p style="margin: 0 0 var(--wa-space-m); color: var(--wa-color-text-quiet); font-size: var(--wa-font-size-s);">
+                    Leave password fields blank to keep your current password.
+                </p>
+
+                <div class="form-grid">
+                    <div class="field">
+                        <label for="currentPassword">Current password</label>
+                        <input id="currentPassword"
+                               type="password"
+                               name="currentPassword"
+                               autocomplete="current-password">
+<!--                               placeholder="Required only when changing password"/>-->
+                    </div>
+
+                    <div class="field">
+                        <label for="newPassword">New password</label>
+                        <input id="newPassword"
+                               type="password"
+                               name="newPassword"
+                               autocomplete="new-password">
+<!--                               placeholder="Leave blank to keep current password"/>-->
+                    </div>
+
+                    <div class="field">
+                        <label for="confirmPassword">Confirm new password</label>
+                        <input id="confirmPassword"
+                               type="password"
+                               name="confirmPassword"
+                               autocomplete="new-password"
+                               placeholder="Repeat new password"/>
+                    </div>
+                </div>
+            </section>
 
             <div class="form-actions">
                 <button type="submit" class="btn-primary">Save</button>

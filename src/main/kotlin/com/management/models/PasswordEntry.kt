@@ -25,6 +25,11 @@ data class PasswordEntry(
     @Column(nullable = false)
     var password: String = "",
 
+    var email: String? = null,
+
+    @Column(name = "mobile_number")
+    var mobileNumber: String? = null,
+
     var description: String = "",
 
     @ManyToOne

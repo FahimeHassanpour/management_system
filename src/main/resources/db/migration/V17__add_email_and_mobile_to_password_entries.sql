@@ -1,0 +1,3 @@
+ALTER TABLE password_entries
+    ADD COLUMN IF NOT EXISTS email VARCHAR(255),
+    ADD COLUMN IF NOT EXISTS mobile_number VARCHAR(50);

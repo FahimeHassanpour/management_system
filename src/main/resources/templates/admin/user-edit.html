@@ -38,13 +38,16 @@
 
                 <div class="field">
                     <label for="roleId">Role</label>
-                    <select id="roleId" name="roleId" required>
-                        <option th:each="role : ${roles}"
-                                th:value="${role.id}"
-                                th:text="${role.name}"
-                                th:selected="${user.role != null and role.id == user.role.id}">
-                        </option>
-                    </select>
+                    <div class="select-dropdown-wrap">
+                        <select id="roleId" name="roleId" required>
+                            <option th:each="role : ${roles}"
+                                    th:value="${role.id}"
+                                    th:text="${role.name}"
+                                    th:selected="${user.role != null and role.id == user.role.id}">
+                            </option>
+                        </select>
+                        <span class="user-dropdown-chevron" aria-hidden="true">▾</span>
+                    </div>
                 </div>
 
             </div>
@@ -54,7 +57,7 @@
                 <div class="team-selector">
                     <button type="button" class="team-selector-box" onclick="toggleTeamDropdown(event)">
                         <span id="teamDropdownText" class="team-dropdown-text">Select Teams</span>
-                        <i class="fa-solid fa-chevron-down team-dropdown-chevron" aria-hidden="true"></i>
+                        <span class="user-dropdown-chevron team-dropdown-chevron" aria-hidden="true">▾</span>
                     </button>
 
                     <div id="teamDropdownPanel" class="team-dropdown-panel">

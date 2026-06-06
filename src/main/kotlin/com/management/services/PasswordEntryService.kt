@@ -45,6 +45,9 @@ class PasswordEntryService(
     private val cellFormatter =
         DataFormatter()
 
+    private fun nullableTrim(value: String?): String? =
+        value?.trim()?.takeIf { it.isNotEmpty() }
+
     fun list(
         query: String?,
         categoryId: Long?,
@@ -95,6 +98,12 @@ class PasswordEntryService(
 
                 password =
                     request.password,
+
+                email =
+                    nullableTrim(request.email),
+
+                mobileNumber =
+                    nullableTrim(request.mobileNumber),
 
                 description =
                     request.description.trim(),
@@ -158,6 +167,12 @@ class PasswordEntryService(
 
         existing.password =
             request.password
+
+        existing.email =
+            nullableTrim(request.email)
+
+        existing.mobileNumber =
+            nullableTrim(request.mobileNumber)
 
         existing.description =
             request.description.trim()
@@ -341,6 +356,12 @@ class PasswordEntryService(
                             parseExpiryDate(it)
                         }
 
+                val email =
+                    nullableTrim(cellValue(row.getCell(5)))
+
+                val mobileNumber =
+                    nullableTrim(cellValue(row.getCell(6)))
+
                 passwordEntryRepository
                     .save(
 
@@ -354,6 +375,12 @@ class PasswordEntryService(
 
                             password =
                                 password,
+
+                            email =
+                                email,
+
+                            mobileNumber =
+                                mobileNumber,
 
                             category =
                                 category,
@@ -467,7 +494,9 @@ class PasswordEntryService(
                 "Username",
                 "Password",
                 "Category",
-                "Expiry"
+                "Expiry",
+                "Email",
+                "Mobile Number"
             )
 
         val headerRow =
@@ -530,6 +559,12 @@ class PasswordEntryService(
 
                         ?: ""
                 )
+
+            row.createCell(5)
+                .setCellValue(entry.email ?: "")
+
+            row.createCell(6)
+                .setCellValue(entry.mobileNumber ?: "")
         }
 
         return ByteArrayOutputStream()

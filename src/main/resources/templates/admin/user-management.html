@@ -98,8 +98,11 @@
                     <!-- EDIT BUTTON -->
                     <td class="users-cell-action">
                         <a th:href="@{'/admin/users/' + ${user.id} + '/edit'}"
-                           class="btn-secondary">
-                            Edit
+                           class="table-action-btn"
+                           aria-label="Edit">
+                            <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                            <span class="table-action-tooltip">Edit</span>
+                            <span class="sr-only">Edit</span>
                         </a>
                     </td>
 

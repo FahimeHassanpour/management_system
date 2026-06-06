@@ -18,6 +18,12 @@
         <p>Create password categories used when saving password entries</p>
     </header>
 
+    <div th:if="${successMessage}" class="alert alert-success">
+        <span th:text="${successMessage}"></span>
+    </div>
+    <div th:if="${errorMessage}" class="alert alert-danger">
+        <span th:text="${errorMessage}"></span>
+    </div>
 
     <section class="card" style="margin-top: var(--wa-space-m);">
         
@@ -30,7 +36,7 @@
             <div style="display:flex; align-items:flex-end; gap: var(--wa-space-s); flex-wrap:wrap;">
                 <div class="field" style="flex:1 1 260px; margin:0;">
                     <label for="name">Name</label>
-                    <input id="name" type="text" name="name" required />
+                    <input id="name" type="text" name="name" required minlength="1" />
                 </div>
 
                 <button type="submit" class="btn-primary">Add</button>
@@ -72,22 +78,54 @@
                                    class="category-name-input"
                                    name="name"
                                    th:value="${cat.name}"
+                                   required
+                                   minlength="1"
                                    readonly />
                         </form>
                     </td>
 
                     <td class="actions-cell">
-                        <div class="row-actions" style="flex-wrap: nowrap;">
+                        <div class="row-actions category-view-actions"
+                             th:id="'cat-view-actions-' + ${cat.id}"
+                             style="flex-wrap: nowrap;">
                             <button type="button"
-                                    class="btn-secondary"
+                                    class="table-action-btn"
                                     th:attr="data-id=${cat.id}"
-                                    onclick="toggleCategoryEdit(this)">
-                                Update
+                                    onclick="startCategoryEdit(this)"
+                                    aria-label="Update">
+                                <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                                <span class="table-action-tooltip">Update</span>
+                                <span class="sr-only">Update</span>
                             </button>
                             <button type="button"
-                                    class="btn-danger-soft"
-                                    th:onclick="'deleteCategory(' + ${cat.id} + ')'">
-                                Delete
+                                    class="table-action-btn table-action-btn-danger"
+                                    th:onclick="'deleteCategory(' + ${cat.id} + ')'"
+                                    aria-label="Delete">
+                                <i class="fa-solid fa-trash" aria-hidden="true"></i>
+                                <span class="table-action-tooltip">Delete</span>
+                                <span class="sr-only">Delete</span>
+                            </button>
+                        </div>
+                        <div class="row-actions category-edit-actions"
+                             th:id="'cat-edit-actions-' + ${cat.id}"
+                             style="flex-wrap: nowrap; display: none;">
+                            <button type="button"
+                                    class="table-action-btn"
+                                    th:attr="data-id=${cat.id}"
+                                    onclick="saveCategoryEdit(this)"
+                                    aria-label="Save">
+                                <i class="fa-solid fa-floppy-disk" aria-hidden="true"></i>
+                                <span class="table-action-tooltip">Save</span>
+                                <span class="sr-only">Save</span>
+                            </button>
+                            <button type="button"
+                                    class="table-action-btn"
+                                    th:attr="data-id=${cat.id}"
+                                    onclick="cancelCategoryEdit(this)"
+                                    aria-label="Cancel">
+                                <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                                <span class="table-action-tooltip">Cancel</span>
+                                <span class="sr-only">Cancel</span>
                             </button>
                         </div>
                     </td>
@@ -122,23 +160,56 @@
 </div>
 
 <script>
-    function toggleCategoryEdit(button) {
+    function getCategoryRowParts(id) {
+        return {
+            input: document.getElementById('cat-name-' + id),
+            form: document.getElementById('update-form-' + id),
+            viewActions: document.getElementById('cat-view-actions-' + id),
+            editActions: document.getElementById('cat-edit-actions-' + id)
+        };
+    }
+
+    function startCategoryEdit(button) {
         const id = button.getAttribute('data-id');
-        const input = document.getElementById('cat-name-' + id);
-        const form = document.getElementById('update-form-' + id);
-        if (!input || !form) return;
+        const parts = getCategoryRowParts(id);
+        if (!parts.input || !parts.viewActions || !parts.editActions || !parts.form) return;
 
-        const isReadonly = input.hasAttribute('readonly');
+        parts.form.dataset.originalName = parts.input.value;
 
-        if (isReadonly) {
-            input.removeAttribute('readonly');
-            input.focus();
-            input.select();
-            button.textContent = 'Save';
+        parts.input.readOnly = false;
+        parts.input.classList.add('is-editing');
+        parts.input.focus();
+        parts.input.select();
+
+        parts.viewActions.style.display = 'none';
+        parts.editActions.style.display = 'inline-flex';
+    }
+
+    function cancelCategoryEdit(button) {
+        const id = button.getAttribute('data-id');
+        const parts = getCategoryRowParts(id);
+        if (!parts.input || !parts.viewActions || !parts.editActions || !parts.form) return;
+
+        parts.input.value = parts.form.dataset.originalName || parts.input.value;
+        parts.input.readOnly = true;
+        parts.input.classList.remove('is-editing');
+
+        parts.viewActions.style.display = 'inline-flex';
+        parts.editActions.style.display = 'none';
+    }
+
+    function saveCategoryEdit(button) {
+        const id = button.getAttribute('data-id');
+        const parts = getCategoryRowParts(id);
+        if (!parts.input || !parts.form) return;
+
+        if (!parts.input.value.trim()) {
+            alert('Category name cannot be empty.');
+            parts.input.focus();
             return;
         }
 
-        form.submit();
+        parts.form.submit();
     }
 
     function deleteCategory(id) {

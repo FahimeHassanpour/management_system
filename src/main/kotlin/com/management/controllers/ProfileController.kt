@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.multipart.MultipartFile
+import org.springframework.web.servlet.mvc.support.RedirectAttributes
 import java.nio.file.Files
 import java.nio.file.Paths
 
@@ -21,18 +22,8 @@ class ProfileController(
 ) {
 
     @GetMapping
-    fun profile(
-        authentication: Authentication,
-        @RequestParam(required = false) success: Boolean?,
-        model: Model
-    ): String {
-        val user = userRepository.findByUsername(authentication.name).orElseThrow()
-
-        model.addAttribute("user", user)
-        model.addAttribute("initials", initialsFromName(user.fullName))
-        if (success == true) {
-            model.addAttribute("successMessage", "Profile updated successfully.")
-        }
+    fun profile(authentication: Authentication, model: Model): String {
+        populateProfileModel(authentication, model)
         return "profile/profile"
     }
 
@@ -41,8 +32,11 @@ class ProfileController(
         authentication: Authentication,
         @RequestParam username: String,
         @RequestParam fullName: String,
-        @RequestParam(required = false) password: String?,
-        @RequestParam(required = false) profileImage: MultipartFile?
+        @RequestParam(required = false) profileImage: MultipartFile?,
+        @RequestParam(required = false) currentPassword: String?,
+        @RequestParam(required = false) newPassword: String?,
+        @RequestParam(required = false) confirmPassword: String?,
+        redirectAttributes: RedirectAttributes
     ): String {
         var fileName: String? = null
 
@@ -60,15 +54,33 @@ class ProfileController(
             profileImage.transferTo(uploadPath.resolve(fileName).toFile())
         }
 
-        profileService.updateProfile(
-            authentication.name,
-            username.trim(),
-            fullName.trim(),
-            password,
-            fileName
-        )
+        return try {
+            profileService.updateProfile(
+                currentUsername = authentication.name,
+                username = username.trim(),
+                fullName = fullName.trim(),
+                profileImage = fileName,
+                currentPassword = currentPassword,
+                newPassword = newPassword,
+                confirmPassword = confirmPassword
+            )
 
-        return "redirect:/profile?success=true"
+            val passwordChanged = !newPassword.isNullOrBlank() || !confirmPassword.isNullOrBlank()
+            redirectAttributes.addFlashAttribute(
+                "successMessage",
+                if (passwordChanged) "Profile and password updated successfully." else "Profile updated successfully."
+            )
+            "redirect:/profile"
+        } catch (ex: IllegalArgumentException) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.message)
+            "redirect:/profile"
+        }
+    }
+
+    private fun populateProfileModel(authentication: Authentication, model: Model) {
+        val user = userRepository.findByUsername(authentication.name).orElseThrow()
+        model.addAttribute("user", user)
+        model.addAttribute("initials", initialsFromName(user.fullName))
     }
 
     private fun initialsFromName(fullName: String): String {

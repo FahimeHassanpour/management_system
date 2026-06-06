@@ -10,6 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.servlet.mvc.support.RedirectAttributes
 
 @Controller
 @RequestMapping("/admin/categories")
@@ -40,27 +41,53 @@ class AdminCategoryController(
     }
 
     @PostMapping
-    fun create(@RequestParam name: String): String {
+    fun create(
+        @RequestParam name: String,
+        redirectAttributes: RedirectAttributes
+    ): String {
         val trimmed = name.trim()
 
-        if (trimmed.isNotEmpty()) {
-            if (categoryRepository.findByName(trimmed).isEmpty) {
-                categoryRepository.save(Category(name = trimmed))
-            }
+        if (trimmed.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Category name cannot be empty.")
+            return "redirect:/admin/categories"
         }
 
+        if (categoryRepository.findByName(trimmed).isPresent) {
+            redirectAttributes.addFlashAttribute("errorMessage", "A category with this name already exists.")
+            return "redirect:/admin/categories"
+        }
+
+        categoryRepository.save(Category(name = trimmed))
+        redirectAttributes.addFlashAttribute("successMessage", "Category added successfully.")
         return "redirect:/admin/categories"
     }
 
     @PostMapping("/update")
-    fun update(@RequestParam id: Long, @RequestParam name: String): String {
+    fun update(
+        @RequestParam id: Long,
+        @RequestParam name: String,
+        redirectAttributes: RedirectAttributes
+    ): String {
+        val trimmed = name.trim()
+
+        if (trimmed.isEmpty()) {
+            redirectAttributes.addFlashAttribute("errorMessage", "Category name cannot be empty.")
+            return "redirect:/admin/categories"
+        }
+
         val category = categoryRepository.findById(id).orElseThrow()
-        category.name = name
+
+        val duplicate = categoryRepository.findByName(trimmed)
+        if (duplicate.isPresent && duplicate.get().id != id) {
+            redirectAttributes.addFlashAttribute("errorMessage", "A category with this name already exists.")
+            return "redirect:/admin/categories"
+        }
+
+        category.name = trimmed
         categoryRepository.save(category)
 
+        redirectAttributes.addFlashAttribute("successMessage", "Category updated successfully.")
         return "redirect:/admin/categories"
-
-        
     }
 
     @PostMapping("/delete")
@@ -77,12 +104,4 @@ class AdminCategoryController(
         categoryRepository.deleteById(id)
         return ResponseEntity.ok(mapOf("message" to "Category deleted."))
     }
-
-
-    @GetMapping("/admin/categories")
-    fun categories(): String {
-        return "categories :: content"
-    }
-
-
 }

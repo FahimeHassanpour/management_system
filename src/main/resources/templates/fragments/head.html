@@ -518,6 +518,95 @@
             align-items: center;
         }
 
+        .row-actions form {
+            margin: 0;
+            display: inline-flex;
+        }
+
+        .table-action-btn {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            min-width: 2.5rem;
+            min-height: 2.5rem;
+            padding: 0;
+            border-radius: 50%;
+            border: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-surface-border);
+            background: var(--wa-color-surface-raised);
+            color: var(--wa-color-text-normal);
+            cursor: pointer;
+            text-decoration: none;
+            line-height: 1;
+            transition: background-color 140ms ease, border-color 140ms ease, transform 120ms ease, box-shadow 140ms ease;
+        }
+
+        .table-action-btn:hover {
+            background: var(--wa-color-surface-lowered);
+            transform: translateY(-1px);
+        }
+
+        .table-action-btn:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 2px color-mix(in srgb, var(--wa-color-focus) 45%, transparent);
+        }
+
+        .table-action-btn-danger {
+            border-color: var(--wa-color-danger-border-loud);
+            background: var(--wa-color-danger-fill-quiet);
+            color: var(--wa-color-danger-on-normal);
+        }
+
+        .table-action-btn-danger:hover {
+            background: var(--wa-color-danger-fill-normal);
+        }
+
+        .table-action-btn i {
+            font-size: var(--wa-font-size-s);
+            line-height: 1;
+            pointer-events: none;
+        }
+
+        .table-action-btn .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        .table-action-btn .table-action-tooltip {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%) translateY(4px);
+            padding: 4px 8px;
+            border-radius: var(--wa-border-radius-s);
+            background: var(--wa-color-surface-raised);
+            border: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-surface-border);
+            box-shadow: var(--wa-shadow-m);
+            font-size: var(--wa-font-size-2xs);
+            font-weight: var(--wa-font-weight-medium);
+            color: var(--wa-color-text-normal);
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 140ms ease, transform 140ms ease;
+            z-index: 30;
+        }
+
+        .table-action-btn:hover .table-action-tooltip,
+        .table-action-btn:focus-visible .table-action-tooltip {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
         .btn-danger-soft {
             border: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-danger-border-loud);
             background: var(--wa-color-danger-fill-quiet);
@@ -641,6 +730,44 @@
 
         .user-dropdown-chevron {
             opacity: .8;
+        }
+
+        .select-dropdown-wrap {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            flex: 0 0 auto;
+        }
+
+        .field .select-dropdown-wrap {
+            display: block;
+            width: 100%;
+        }
+
+        .field.select-dropdown-wrap {
+            display: block;
+            width: 100%;
+        }
+
+        .select-dropdown-wrap select {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            padding-right: 2.25rem;
+            width: 100%;
+        }
+
+        .category-field .select-dropdown-wrap select {
+            min-height: calc(var(--wa-space-s) * 2 + var(--wa-font-size-s) + var(--wa-space-xs));
+        }
+
+        .select-dropdown-wrap .user-dropdown-chevron {
+            position: absolute;
+            right: var(--wa-space-m);
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            line-height: 1;
         }
 
         .user-dropdown-panel {
@@ -896,16 +1023,38 @@
             text-align: right;
             width: 1%;
             white-space: nowrap;
+            overflow: visible;
         }
 
         .actions-cell .row-actions {
             display: flex;
             justify-content: flex-end;
             gap: var(--wa-space-2xs);
+            overflow: visible;
         }
         .category-name-input {
             width: min(100%, 320px) !important;
             max-width: 320px;
+            box-sizing: border-box;
+        }
+
+        .category-name-input[readonly]:not(.is-editing) {
+            border: none;
+            background: transparent;
+            padding: 0;
+            color: var(--wa-color-text-normal);
+            cursor: default;
+            outline: none;
+            box-shadow: none;
+        }
+
+        .category-name-input.is-editing {
+            padding: var(--wa-space-xs) var(--wa-space-s);
+            border: var(--wa-form-control-border-width) var(--wa-form-control-border-style) var(--wa-form-control-border-color);
+            border-radius: var(--wa-border-radius-m);
+            background: var(--wa-form-control-background-color);
+            color: var(--wa-form-control-value-color);
+            cursor: text;
         }
         .name-cell {
             width: calc(100% - 260px);
@@ -1257,17 +1406,15 @@
         .data-table.users-table .users-cell-action {
             text-align: right;
             white-space: nowrap;
+            overflow: visible;
         }
 
-        .data-table.users-table .users-cell-action .btn-secondary {
-            min-height: 2.25rem;
-            padding: var(--wa-space-2xs) var(--wa-space-m);
-            font-size: var(--wa-font-size-xs);
-            border-radius: var(--wa-border-radius-m);
-            transition: background-color 140ms ease, border-color 140ms ease, transform 120ms ease;
+        .data-table.users-table .users-cell-action .table-action-btn {
+            min-height: 2.5rem;
+            padding: 0;
         }
 
-        .data-table.users-table .users-cell-action .btn-secondary:hover {
+        .data-table.users-table .users-cell-action .table-action-btn:hover {
             transform: translateY(-1px);
         }
 
@@ -1660,29 +1807,12 @@
         }
 
         .profile-icon-btn {
-            width: 42px;
-            height: 42px;
-
-            border: none;
-            border-radius: 50%;
-
-            cursor: pointer;
-
-            font-size: 20px;
-
             display: flex;
             align-items: center;
             justify-content: center;
-
-            background: white;
-
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-
-            transition: 0.2s;
-        }
-
-        .profile-icon-btn:hover {
-            transform: scale(1.05);
+            padding: 0;
+            font-size: 16px;
+            line-height: 1;
         }
 
         .profile-popup {
@@ -1718,24 +1848,6 @@
             display: inline-block;
         }
 
-        .profile-icon-btn {
-
-            width: 42px;
-            height: 42px;
-
-            border: none;
-
-            border-radius: 50%;
-
-            cursor: pointer;
-
-            font-size: 20px;
-
-            background: white;
-
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-
         .profile-popup {
 
             display: none;
@@ -1748,7 +1860,7 @@
 
             width: 220px;
 
-            background: white;
+            background: dark;
 
             border-radius: 14px;
 
@@ -1830,6 +1942,30 @@
             align-items: center;
             margin-bottom: 24px;
         }
+        .profile-icon-btn .profile-btn-photo {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .profile-icon-btn .profile-btn-initials {
+            font-size: 14px;
+            font-weight: 600;
+            line-height: 1;
+        }
+        .password-row {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+        }
+
+        .password-row .form-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
 
 
     </style>
@@ -1907,13 +2043,7 @@
             );
         }
 
-        function updateThemeButton(theme) {
-
-            var button =
-                document.getElementById(
-                    'themeToggle'
-                );
-
+        function applyThemeButtonClasses(button, theme) {
             if (!button) return;
 
             button.classList.remove(
@@ -1922,21 +2052,32 @@
             );
 
             if (theme === 'dark') {
-
-                button.innerHTML = '🌙';
-
-                button.classList.add(
-                    'dark-theme-btn'
-                );
-
+                button.classList.add('dark-theme-btn');
             } else {
-
-                button.innerHTML = '☀️';
-
-                button.classList.add(
-                    'light-theme-btn'
-                );
+                button.classList.add('light-theme-btn');
             }
+        }
+
+        function updateThemeButton(theme) {
+
+            var button =
+                document.getElementById(
+                    'themeToggle'
+                );
+
+            if (button) {
+                if (theme === 'dark') {
+                    button.innerHTML = '🌙';
+                } else {
+                    button.innerHTML = '☀️';
+                }
+                applyThemeButtonClasses(button, theme);
+            }
+
+            applyThemeButtonClasses(
+                document.querySelector('.profile-icon-btn'),
+                theme
+            );
         }
 
         document.addEventListener(

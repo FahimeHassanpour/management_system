@@ -13,7 +13,8 @@ interface PasswordEntryRepository : JpaRepository<PasswordEntry, Long> {
         SELECT p FROM PasswordEntry p
         WHERE (:query IS NULL OR :query = '' OR
                LOWER(p.title) LIKE LOWER(CONCAT('%', :query, '%')) OR
-               LOWER(p.description) LIKE LOWER(CONCAT('%', :query, '%')))
+               LOWER(p.description) LIKE LOWER(CONCAT('%', :query, '%')) OR
+               LOWER(p.username) LIKE LOWER(CONCAT('%', :query, '%')))
           AND (:categoryId IS NULL OR p.category.id = :categoryId)
         """
     )

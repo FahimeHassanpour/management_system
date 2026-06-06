@@ -28,6 +28,13 @@
                 User management
             </a>
 
+            <a th:if="${#authorization.expression('hasRole(''ADMIN'')')}"
+               th:href="@{/admin/audit}"
+               th:classappend="${active == 'audit'} ? 'active'"
+               class="nav-link">
+                Audit logs
+            </a>
+
             <a sec:authorize="hasAnyRole('ADMIN','MANAGER')"
                th:href="@{/admin/reports/user-access}"
                th:classappend="${active == 'reports'} ? 'active'"
@@ -41,14 +48,19 @@
             <div class="profile-popup-wrapper">
 
                 <button type="button"
-                        class="profile-icon-btn"
+                        class="theme-btn dark-theme-btn profile-icon-btn"
                         aria-haspopup="true"
                         aria-expanded="false">
 
-                    👤
+                    <img th:if="${sidebarUser?.profileImage != null}"
+                         th:src="@{'/uploads/profile-images/' + ${sidebarUser.profileImage}}"
+                         alt="Profile"
+                         class="profile-btn-photo"/>
 
+                    <span th:unless="${sidebarUser?.profileImage != null}"
+                          class="profile-btn-initials"
+                          th:text="${sidebarInitials}">?</span>
                 </button>
-
                 <div class="profile-popup"
                      aria-hidden="true">
 

@@ -89,6 +89,8 @@ class AdminPasswordController(
                 username = entry.username,
                 password = entry.password,
                 description = entry.description,
+                email = entry.email,
+                mobileNumber = entry.mobileNumber,
                 categoryId = entry.category?.id,
                 userIds = selectedUserIds.toList(),
                 expiryDate = entry.expiryDate?.format(dtFormatter),
@@ -173,6 +175,8 @@ class AdminPasswordController(
         header.createCell(2).setCellValue("Password")
         header.createCell(3).setCellValue("Category")
         header.createCell(4).setCellValue("Expiry Date")
+        header.createCell(5).setCellValue("Email")
+        header.createCell(6).setCellValue("Mobile Number")
 
         val output = ByteArrayOutputStream()
 
