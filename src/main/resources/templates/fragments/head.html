@@ -96,7 +96,8 @@
             margin-bottom: var(--wa-space-m);
         }
 
-        .alert-error {
+        .alert-error,
+        .alert-danger {
             background: var(--wa-color-danger-fill-quiet);
             border: var(--wa-border-width-s) var(--wa-border-style) var(--wa-color-danger-border-normal);
             color: var(--wa-color-danger-on-normal);
@@ -1447,6 +1448,48 @@
             color: var(--wa-color-text-quiet);
         }
 
+        .status-badge {
+            display: inline-block;
+            padding: 0.2rem 0.65rem;
+            border-radius: var(--wa-border-radius-xs, 4px);
+            font-size: var(--wa-font-size-2xs);
+            font-weight: var(--wa-font-weight-semibold);
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+            border: var(--wa-border-width-s) var(--wa-border-style) transparent;
+        }
+
+        .status-badge.status-active {
+            background: color-mix(in srgb, #22c55e 22%, transparent);
+            border-color: color-mix(in srgb, #22c55e 50%, transparent);
+            color: #86efac;
+        }
+
+        .status-badge.status-inactive {
+            background: color-mix(in srgb, #ef4444 18%, transparent);
+            border-color: color-mix(in srgb, #ef4444 45%, transparent);
+            color: #fca5a5;
+        }
+
+        .data-table.users-table tr.user-row-inactive td {
+            opacity: 0.78;
+        }
+
+        .data-table.users-table tr.user-row-inactive .users-cell-name,
+        .data-table.users-table tr.user-row-inactive .users-cell-email {
+            color: var(--wa-color-text-quiet);
+        }
+
+        .table-action-btn-success {
+            border-color: color-mix(in srgb, #22c55e 45%, var(--wa-color-surface-border));
+            color: #86efac;
+        }
+
+        .table-action-btn-success:hover {
+            background: color-mix(in srgb, #22c55e 18%, var(--wa-color-surface-raised));
+            border-color: color-mix(in srgb, #22c55e 55%, var(--wa-color-surface-border));
+        }
+
         .team-pill {
             display: inline-block;
             padding: 0.15rem 0.55rem;
@@ -1965,6 +2008,10 @@
             flex: 1;
             display: flex;
             flex-direction: column;
+        }
+        #teamSearch {
+            width: 100%;
+            margin-bottom: 8px;
         }
 
 

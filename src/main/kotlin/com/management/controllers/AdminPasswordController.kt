@@ -6,6 +6,7 @@ import com.management.repositories.CategoryRepository
 import com.management.repositories.TeamRepository
 import com.management.repositories.UserRepository
 import com.management.services.AssignmentService
+import com.management.services.DuplicatePasswordEntryException
 import com.management.services.PasswordEntryService
 import com.management.util.PasswordExpiry
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
@@ -26,8 +27,6 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.MediaType
 import java.io.ByteArrayOutputStream
 import java.time.LocalDateTime
-
-
 
 @Controller
 @RequestMapping("/admin/passwords")
@@ -77,7 +76,11 @@ class AdminPasswordController(
 
     @GetMapping("/{id}/edit")
     @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
-    fun editForm(@PathVariable id: Long, model: Model): String {
+    fun editForm(
+        @PathVariable id: Long,
+        @RequestParam(required = false) success: Boolean?,
+        model: Model
+    ): String {
         val entry: PasswordEntry = passwordEntryService.getById(id)
         val selectedUserIds = assignmentService.assignedUserIdsForEntry(id)
         val selectedTeamIds = passwordEntryService.findTeamIdsForPassword(id)
@@ -105,16 +108,34 @@ class AdminPasswordController(
         model.addAttribute("isEdit", true)
         model.addAttribute("teams", teamRepository.findAll()
         )
+        if (success == true) {
+            model.addAttribute(
+                "successMessage",
+                "Password updated successfully."
+            )
+        }
+
 
         return "admin/password-form"
+
+
     }
 
     @PostMapping
     @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
-    fun create(@ModelAttribute entryRequest: PasswordEntryRequest): String {
-        val savedEntry = passwordEntryService.create(entryRequest)
-        assignmentService.syncAssignments(savedEntry.id!!, entryRequest.userIds.toSet())
-        return "redirect:/admin/passwords"
+    fun create(
+        @ModelAttribute entryRequest: PasswordEntryRequest,
+        model: Model
+    ): String {
+        return try {
+            val savedEntry = passwordEntryService.create(entryRequest)
+            assignmentService.syncAssignments(savedEntry.id!!, entryRequest.userIds.toSet())
+            "redirect:/admin/passwords"
+        } catch (ex: DuplicatePasswordEntryException) {
+            populatePasswordFormModel(model, entryRequest, isEdit = false)
+            model.addAttribute("errorMessage", ex.message)
+            "admin/password-form"
+        }
     }
 
     @PostMapping("/{id}")
@@ -122,14 +143,29 @@ class AdminPasswordController(
     fun update(
         @PathVariable id: Long,
         @ModelAttribute entryRequest: PasswordEntryRequest,
+        model: Model,
         redirectAttributes: RedirectAttributes
     ): String {
-        passwordEntryService.update(id, entryRequest)
-        assignmentService.syncAssignments(id, entryRequest.userIds.toSet())
-
-        redirectAttributes.addFlashAttribute("successMessage", "Password updated successfully and users notified")
-
-        return "redirect:/admin/passwords"
+        return try {
+            passwordEntryService.update(id, entryRequest)
+            assignmentService.syncAssignments(id, entryRequest.userIds.toSet())
+            redirectAttributes.addFlashAttribute(
+                "successMessage",
+                "Password updated successfully and users notified"
+            )
+            "redirect:/admin/passwords/$id/edit?success=true"
+        } catch (ex: DuplicatePasswordEntryException) {
+            populatePasswordFormModel(
+                model,
+                entryRequest,
+                isEdit = true,
+                entryId = id,
+                selectedUserIds = entryRequest.userIds.toSet(),
+                selectedTeamIds = entryRequest.teamIds.toSet()
+            )
+            model.addAttribute("errorMessage", ex.message)
+            "admin/password-form"
+        }
     }
 
     @PostMapping("/{id}/delete")
@@ -137,6 +173,26 @@ class AdminPasswordController(
     fun delete(@PathVariable id: Long): String {
         passwordEntryService.delete(id)
         return "redirect:/admin/passwords"
+    }
+
+    private fun populatePasswordFormModel(
+        model: Model,
+        entryRequest: PasswordEntryRequest,
+        isEdit: Boolean,
+        entryId: Long? = null,
+        selectedUserIds: Set<Long>? = null,
+        selectedTeamIds: Set<Long>? = null
+    ) {
+        model.addAttribute("entryRequest", entryRequest)
+        model.addAttribute("categories", categoryRepository.findAll())
+        model.addAttribute("users", assignableUsers())
+        model.addAttribute("selectedUserIds", selectedUserIds ?: entryRequest.userIds.toSet())
+        model.addAttribute("selectedTeamIds", selectedTeamIds ?: entryRequest.teamIds.toSet())
+        model.addAttribute("isEdit", isEdit)
+        model.addAttribute("teams", teamRepository.findAll())
+        if (isEdit && entryId != null) {
+            model.addAttribute("entryId", entryId)
+        }
     }
 
     private fun assignableUsers() = userRepository.findAll()
@@ -177,6 +233,10 @@ class AdminPasswordController(
         header.createCell(4).setCellValue("Expiry Date")
         header.createCell(5).setCellValue("Email")
         header.createCell(6).setCellValue("Mobile Number")
+        header.createCell(7).setCellValue("Description")
+        header.createCell(8).setCellValue("user_id")
+        header.createCell(9).setCellValue("team_id")
+
 
         val output = ByteArrayOutputStream()
 
@@ -209,7 +269,7 @@ class AdminPasswordController(
                 if (imported > 0) {
                     "Imported $imported password entr${if (imported == 1) "y" else "ies"} from Excel."
                 } else {
-                    "No new password entries were imported. Rows may be empty, invalid, or already exist."
+                    "No password entries were imported. Rows may be empty or invalid."
                 }
             )
             "redirect:/admin/passwords"
@@ -257,19 +317,19 @@ class AdminPasswordController(
         val entryUsers: Map<Long, List<String>> = entries
             .mapNotNull { entry ->
                 val entryId = entry.id ?: return@mapNotNull null
-                val userIds = assignmentService.assignedUserIdsForEntryIncludingTeams(entryId)
+                val userIds = assignmentService.assignedUserIdsForEntry(entryId)
                 val users = if (userIds.isEmpty()) {
                     emptyList()
                 } else {
                     userRepository.findAllWithRolesByIds(userIds)
-                        .filter { user ->
-                            val roleName = user.role?.name?.trim()?.uppercase()
-                            roleName == null || roleName !in privilegedRoles
-                        }
                         .map { "${it.username} (${it.email})" }
                         .sorted()
                 }
-                entryId to users
+                val teamLabels =
+                    teamRepository.findAllById(passwordEntryService.findTeamIdsForPassword(entryId))
+                        .map { team -> "Team: ${team.name}" }
+                        .sorted()
+                entryId to (users + teamLabels).sorted()
             }
             .toMap()
 

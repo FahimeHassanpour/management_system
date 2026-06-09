@@ -26,10 +26,10 @@
             </p>
 
             <div style="display:flex; align-items:center; gap: var(--wa-space-xs); flex-wrap: wrap;">
-                <a th:href="@{/admin/audit/export.pdf}"
+                <a th:href="@{/admin/audit/export.xlsx}"
                    class="btn-primary"
-                   title="Download every audit record as a PDF">
-                    Download PDF
+                   title="Download every audit record as an Excel file">
+                    Download Excel
                 </a>
 
                 <form th:action="@{/admin/audit/purge}" method="post"

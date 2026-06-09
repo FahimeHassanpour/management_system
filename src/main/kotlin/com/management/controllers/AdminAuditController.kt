@@ -47,16 +47,20 @@ class AdminAuditController(
         return "admin/audit-list"
     }
 
-    @GetMapping("/export.pdf")
-    fun exportPdf(): ResponseEntity<ByteArray> {
+    @GetMapping("/export.xlsx")
+    fun exportExcel(): ResponseEntity<ByteArray> {
         val entries = auditLogService.listAll()
-        val pdf = auditLogService.renderPdf(entries)
+        val bytes = auditLogService.renderExcel(entries)
         val timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"))
-        val filename = "audit-log-$timestamp.pdf"
+        val filename = "audit-log-$timestamp.xlsx"
         return ResponseEntity.ok()
             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"$filename\"")
-            .contentType(MediaType.APPLICATION_PDF)
-            .body(pdf)
+            .contentType(
+                MediaType.parseMediaType(
+                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                )
+            )
+            .body(bytes)
     }
 
     @PostMapping("/{rev}/delete")

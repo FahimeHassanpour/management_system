@@ -24,7 +24,13 @@ class CustomUserDetailsService(
         return org.springframework.security.core.userdetails.User(
             user.username,
             user.password,
+            user.active,
+            true,
+            true,
+            true,
             listOf(SimpleGrantedAuthority(authority))
         )
+
+
     }
 }

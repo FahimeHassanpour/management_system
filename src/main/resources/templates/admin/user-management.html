@@ -10,22 +10,21 @@
 <body class="dashboard-body">
 <div class="dashboard-container">
 
-    <!-- HEADER -->
     <header class="page-header">
         <h1>Admin User Management</h1>
         <p>Manage users, roles, and account information.</p>
     </header>
 
 
-    <!-- FLASH MESSAGES -->
-    <div th:if="${successMessage}" class="alert alert-success" style="margin-bottom: var(--wa-space-s);">
-        <span th:text="${successMessage}"></span>
-    </div>
-    <div th:if="${errorMessage}" class="alert alert-danger" style="margin-bottom: var(--wa-space-s);">
-        <span th:text="${errorMessage}"></span>
-    </div>
+    <div id="successMessage"
+         class="alert alert-success"
+         th:style="${successMessage} ? '' : 'display:none'"
+         th:text="${successMessage}"></div>
+    <div id="errorMessage"
+         class="alert alert-danger"
+         th:style="${errorMessage} ? '' : 'display:none'"
+         th:text="${errorMessage}"></div>
 
-    <!-- ADMIN ACTIONS -->
     <section class="card" sec:authorize="hasRole('ADMIN')">
         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap: var(--wa-space-s);">
             <p style="margin:0; color: var(--wa-color-text-quiet);">
@@ -40,7 +39,6 @@
         </div>
     </section>
 
-    <!-- USERS TABLE -->
     <section class="card users-table-card" style="margin-top: var(--wa-space-m);">
 
         <div class="users-table-heading">
@@ -60,22 +58,21 @@
                     <th>Full Name</th>
                     <th>Email</th>
                     <th>Role</th>
+                    <th>Status</th>
                     <th>Teams</th>
-                    <th>Action</th>
+                    <th>Actions</th>
                 </tr>
                 </thead>
 
                 <tbody>
 
-                <tr th:each="user : ${users}">
+                <tr th:each="user : ${users}"
+                    th:classappend="${!user.active} ? ' user-row-inactive' : ''">
 
-                    <!-- FULL NAME -->
                     <td class="users-cell-name" th:text="${user.fullName}">Full Name</td>
 
-                    <!-- EMAIL -->
                     <td class="users-cell-email" th:text="${user.email}">Email</td>
 
-                    <!-- ROLE -->
                     <td>
                         <span class="role-badge"
                               th:text="${user.role != null ? user.role.name : 'USER'}"
@@ -83,6 +80,13 @@
                                 : (${user.role != null and user.role.name == 'MANAGER'} ? ' role-manager' : ' role-user')">
                             USER
                         </span>
+                    </td>
+
+                    <td>
+                        <span th:if="${user.active}"
+                              class="status-badge status-active">Active</span>
+                        <span th:unless="${user.active}"
+                              class="status-badge status-inactive">Inactive</span>
                     </td>
 
                     <td class="users-cell-teams">
@@ -95,15 +99,46 @@
                         </span>
                     </td>
 
-                    <!-- EDIT BUTTON -->
                     <td class="users-cell-action">
-                        <a th:href="@{'/admin/users/' + ${user.id} + '/edit'}"
-                           class="table-action-btn"
-                           aria-label="Edit">
-                            <i class="fa-solid fa-pen" aria-hidden="true"></i>
-                            <span class="table-action-tooltip">Edit</span>
-                            <span class="sr-only">Edit</span>
-                        </a>
+                        <div class="row-actions">
+                            <a th:href="@{'/admin/users/' + ${user.id} + '/edit'}"
+                               class="table-action-btn"
+                               aria-label="Edit user">
+                                <i class="fa-solid fa-pen" aria-hidden="true"></i>
+                                <span class="table-action-tooltip">Edit</span>
+                                <span class="sr-only">Edit</span>
+                            </a>
+
+                            <form sec:authorize="hasRole('ADMIN')"
+                                  th:if="${user.active}"
+                                  th:action="@{'/admin/users/' + ${user.id} + '/active'}"
+                                  method="post"
+                                  onsubmit="return confirm('Deactivate this user? They will not be able to login.');">
+                                <input type="hidden" name="active" value="false" />
+                                <button type="submit"
+                                        class="table-action-btn table-action-btn-danger"
+                                        aria-label="Deactivate user">
+                                    <i class="fa-solid fa-user-slash" aria-hidden="true"></i>
+                                    <span class="table-action-tooltip">Deactivate</span>
+                                    <span class="sr-only">Deactivate</span>
+                                </button>
+                            </form>
+
+                            <form sec:authorize="hasRole('ADMIN')"
+                                  th:unless="${user.active}"
+                                  th:action="@{'/admin/users/' + ${user.id} + '/active'}"
+                                  method="post"
+                                  onsubmit="return confirm('Activate this user? They will be able to login again.');">
+                                <input type="hidden" name="active" value="true" />
+                                <button type="submit"
+                                        class="table-action-btn table-action-btn-success"
+                                        aria-label="Activate user">
+                                    <i class="fa-solid fa-user-check" aria-hidden="true"></i>
+                                    <span class="table-action-tooltip">Activate</span>
+                                    <span class="sr-only">Activate</span>
+                                </button>
+                            </form>
+                        </div>
                     </td>
 
                 </tr>

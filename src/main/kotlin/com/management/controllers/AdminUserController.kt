@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import com.management.repositories.TeamRepository
+import org.springframework.web.servlet.mvc.support.RedirectAttributes
+import java.security.Principal
 
 
 @Controller
@@ -118,6 +120,26 @@ class AdminUserController(
         @RequestBody teamIds: Set<Long>
     ) {
         userTeamService.assignTeams(id, teamIds)
+    }
+
+    @PostMapping("/{userId}/active")
+    @PreAuthorize("hasRole('ADMIN')")
+    fun setActive(
+        @PathVariable userId: Long,
+        @RequestParam active: Boolean,
+        principal: Principal,
+        redirectAttributes: RedirectAttributes
+    ): String {
+        try {
+            adminUserService.setUserActive(userId, active, principal.name)
+            redirectAttributes.addFlashAttribute(
+                "successMessage",
+                if (active) "User activated." else "User deactivated."
+            )
+        } catch (ex: Exception) {
+            redirectAttributes.addFlashAttribute("errorMessage", ex.message)
+        }
+        return "redirect:/admin/users"
     }
 
 }

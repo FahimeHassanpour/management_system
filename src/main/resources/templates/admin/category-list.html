@@ -18,12 +18,14 @@
         <p>Create password categories used when saving password entries</p>
     </header>
 
-    <div th:if="${successMessage}" class="alert alert-success">
-        <span th:text="${successMessage}"></span>
-    </div>
-    <div th:if="${errorMessage}" class="alert alert-danger">
-        <span th:text="${errorMessage}"></span>
-    </div>
+    <div id="successMessage"
+         class="alert alert-success"
+         th:style="${successMessage} ? '' : 'display:none'"
+         th:text="${successMessage}"></div>
+    <div id="errorMessage"
+         class="alert alert-danger"
+         th:style="${errorMessage} ? '' : 'display:none'"
+         th:text="${errorMessage}"></div>
 
     <section class="card" style="margin-top: var(--wa-space-m);">
         
@@ -233,11 +235,23 @@
         })
             .then(async (response) => {
                 const data = await response.json().catch(() => ({}));
+                const successMessage = document.getElementById('successMessage');
+                const errorMessage = document.getElementById('errorMessage');
+
                 if (response.ok) {
                     const row = document.getElementById('row-' + id);
                     if (row) row.remove();
-                } else {
-                    alert(data.message || "Cannot delete this category.");
+                    if (errorMessage) errorMessage.style.display = 'none';
+                    if (successMessage) {
+                        successMessage.textContent =
+                            data.message || 'Category deleted.';
+                        successMessage.style.display = 'block';
+                    }
+                } else if (errorMessage) {
+                    if (successMessage) successMessage.style.display = 'none';
+                    errorMessage.textContent =
+                        data.message || 'Could not delete category.';
+                    errorMessage.style.display = 'block';
                 }
             })
             .catch((error) => {

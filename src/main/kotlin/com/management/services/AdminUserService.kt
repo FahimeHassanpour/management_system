@@ -46,4 +46,18 @@ class AdminUserService(
         user.role = role
         userRepository.save(user)
     }
+
+    fun setUserActive(userId: Long, active: Boolean, currentUsername: String) {
+        val user = userRepository.findById(userId)
+            .orElseThrow { RuntimeException("User not found") }
+
+        if (user.username == currentUsername && !active) {
+            throw RuntimeException("You cannot deactivate your own account.")
+        }
+        if (!active && user.role?.name == "ADMIN") {
+        }
+
+        user.active = active
+        userRepository.save(user)
+    }
 }

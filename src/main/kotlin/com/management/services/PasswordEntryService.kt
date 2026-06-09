@@ -7,7 +7,12 @@ import com.management.repositories.AssignmentRepository
 import com.management.repositories.CategoryRepository
 import com.management.repositories.PasswordEntryRepository
 import com.management.repositories.TeamPasswordAssignmentRepository
+import com.management.repositories.TeamRepository
+import com.management.repositories.UserRepository
+import org.apache.poi.ss.usermodel.Cell
+import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.DataFormatter
+import org.apache.poi.ss.usermodel.Row
 import org.apache.poi.ss.usermodel.WorkbookFactory
 import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.springframework.data.domain.Page
@@ -39,7 +44,11 @@ class PasswordEntryService(
     private val teamPasswordAssignmentRepository:
     TeamPasswordAssignmentRepository,
 
-    private val teamPasswordAssignmentSyncService: TeamPasswordAssignmentSyncService
+    private val teamPasswordAssignmentSyncService: TeamPasswordAssignmentSyncService,
+
+    private val assignmentService: AssignmentService,
+    private val userRepository: UserRepository,
+    private val teamRepository: TeamRepository
 ) {
 
     private val cellFormatter =
@@ -47,6 +56,17 @@ class PasswordEntryService(
 
     private fun nullableTrim(value: String?): String? =
         value?.trim()?.takeIf { it.isNotEmpty() }
+
+    private fun assertUniqueTitleAndUsername(
+        title: String,
+        username: String,
+        excludeId: Long? = null
+    ) {
+        val duplicate = passwordEntryRepository.findByTitleAndUsername(title, username)
+        if (duplicate != null && duplicate.id != excludeId) {
+            throw DuplicatePasswordEntryException()
+        }
+    }
 
     fun list(
         query: String?,
@@ -87,14 +107,16 @@ class PasswordEntryService(
         request: PasswordEntryRequest
     ): PasswordEntry {
 
+        val title = request.title.trim()
+        val username = request.username.trim()
+        assertUniqueTitleAndUsername(title, username)
+
         val entry =
             PasswordEntry(
 
-                title =
-                    request.title.trim(),
+                title = title,
 
-                username =
-                    request.username.trim(),
+                username = username,
 
                 password =
                     request.password,
@@ -159,11 +181,13 @@ class PasswordEntryService(
         val existing =
             getById(id)
 
-        existing.title =
-            request.title.trim()
+        val title = request.title.trim()
+        val username = request.username.trim()
+        assertUniqueTitleAndUsername(title, username, excludeId = id)
 
-        existing.username =
-            request.username.trim()
+        existing.title = title
+
+        existing.username = username
 
         existing.password =
             request.password
@@ -186,6 +210,8 @@ class PasswordEntryService(
             parseExpiryDate(
                 request.expiryDate
             )
+
+
 
         val saved =
             passwordEntryRepository
@@ -242,6 +268,7 @@ class PasswordEntryService(
         return teamPasswordAssignmentRepository.findTeamIdsByPasswordId(passwordId)
     }
 
+    @Transactional
     fun importExcel(
         file: MultipartFile
 
@@ -265,6 +292,7 @@ class PasswordEntryService(
                 workbook
                     .getSheetAt(0)
 
+            val columns = resolveImportColumns(sheet.getRow(0))
             var imported = 0
 
             for (
@@ -278,17 +306,17 @@ class PasswordEntryService(
 
                 val title =
                     cellValue(
-                        row.getCell(0)
+                        row.getCell(columns.title)
                     )
 
                 val username =
                     cellValue(
-                        row.getCell(1)
+                        row.getCell(columns.username)
                     )
 
                 val password =
                     cellValue(
-                        row.getCell(2)
+                        row.getCell(columns.password)
                     )
 
                 if (
@@ -296,56 +324,55 @@ class PasswordEntryService(
                     username.isBlank() &&
                     password.isBlank()
                 ) {
-
                     continue
                 }
 
-                val exists =
-                    passwordEntryRepository
-                        .existsByTitleAndUsername(
-                            title.trim(),
-                            username.trim()
-                        )
+                if (title.isBlank() || username.isBlank() || password.isBlank()) {
+                    throw RuntimeException("Row ${i + 1}: Title, Username, and Password are required.")
+                }
 
-                if (exists) {
+                val trimmedTitle = title.trim()
+                val trimmedUsername = username.trim()
+                val existingEntry =
+                    passwordEntryRepository.findByTitleAndUsername(
+                        trimmedTitle,
+                        trimmedUsername
+                    )
 
+                if (existingEntry != null) {
+                    val passwordId = existingEntry.id
+                        ?: throw RuntimeException("Row ${i + 1}: Existing password entry has no id.")
+                    applyImportAssignments(
+                        rowIndex = i,
+                        passwordId = passwordId,
+                        userIdsCell = columns.userIds?.let { col -> row.getCell(col) },
+                        teamIdsCell = columns.teamIds?.let { col -> row.getCell(col) },
+                        syncUsers = columns.userIds != null,
+                        syncTeams = columns.teamIds != null
+                    )
+                    imported++
                     continue
                 }
 
                 val categoryName =
                     cellValue(
-                        row.getCell(3)
+                        row.getCell(columns.category)
                     )
 
+                if (categoryName.isBlank()) {
+                    throw RuntimeException("Row ${i + 1}: Category is required.")
+                }
+
                 val category =
-                    categoryName
-                        .takeIf {
-                            it.isNotBlank()
-                        }
-
-                        ?.let { name ->
-
-                            categoryRepository
-                                .findByName(
-                                    name.trim()
-                                )
-
-                                .orElseGet {
-
-                                    categoryRepository
-                                        .save(
-
-                                            Category(
-                                                name =
-                                                    name.trim()
-                                            )
-                                        )
-                                }
+                    categoryRepository
+                        .findByName(categoryName.trim())
+                        .orElseGet {
+                            categoryRepository.save(Category(name = categoryName.trim()))
                         }
 
                 val expiryDate =
                     cellValue(
-                        row.getCell(4)
+                        row.getCell(columns.expiryDate)
                     )
 
                         .takeIf {
@@ -357,38 +384,38 @@ class PasswordEntryService(
                         }
 
                 val email =
-                    nullableTrim(cellValue(row.getCell(5)))
+                    nullableTrim(cellValue(row.getCell(columns.email)))
 
                 val mobileNumber =
-                    nullableTrim(cellValue(row.getCell(6)))
+                    nullableTrim(cellValue(row.getCell(columns.mobileNumber)))
 
-                passwordEntryRepository
-                    .save(
+                val description =
+                    cellValue(row.getCell(columns.description))
 
-                        PasswordEntry(
-
-                            title =
-                                title.trim(),
-
-                            username =
-                                username.trim(),
-
-                            password =
-                                password,
-
-                            email =
-                                email,
-
-                            mobileNumber =
-                                mobileNumber,
-
-                            category =
-                                category,
-
-                            expiryDate =
-                                expiryDate
-                        )
+                val savedPassword = passwordEntryRepository.save(
+                    PasswordEntry(
+                        title = trimmedTitle,
+                        username = trimmedUsername,
+                        password = password,
+                        email = email,
+                        mobileNumber = mobileNumber,
+                        description = description.trim(),
+                        category = category,
+                        expiryDate = expiryDate
                     )
+                )
+
+                val passwordId = savedPassword.id
+                    ?: throw RuntimeException("Row ${i + 1}: Failed to save password entry.")
+
+                applyImportAssignments(
+                    rowIndex = i,
+                    passwordId = passwordId,
+                    userIdsCell = columns.userIds?.let { col -> row.getCell(col) },
+                    teamIdsCell = columns.teamIds?.let { col -> row.getCell(col) },
+                    syncUsers = columns.userIds != null,
+                    syncTeams = columns.teamIds != null
+                )
 
                 imported++
             }
@@ -398,6 +425,117 @@ class PasswordEntryService(
         } finally {
 
             workbook.close()
+        }
+    }
+
+    private data class ImportColumns(
+        val title: Int = 0,
+        val username: Int = 1,
+        val password: Int = 2,
+        val category: Int = 3,
+        val expiryDate: Int = 4,
+        val email: Int = 5,
+        val mobileNumber: Int = 6,
+        val description: Int = 7,
+        val userIds: Int? = 8,
+        val teamIds: Int? = 9
+    )
+
+    private fun resolveImportColumns(headerRow: Row?): ImportColumns {
+        if (headerRow == null) {
+            return ImportColumns()
+        }
+
+        val headerMap = mutableMapOf<String, Int>()
+        for (cell in headerRow) {
+            val key = normalizeImportHeader(cellValue(cell))
+            if (key.isNotEmpty()) {
+                headerMap[key] = cell.columnIndex
+            }
+        }
+
+        if ("title" !in headerMap && "username" !in headerMap) {
+            return ImportColumns()
+        }
+
+        fun col(vararg keys: String, default: Int): Int =
+            keys.firstNotNullOfOrNull { headerMap[it] } ?: default
+
+        fun colOptional(vararg keys: String): Int? =
+            keys.firstNotNullOfOrNull { headerMap[it] }
+
+        val userIdsCol = colOptional("user_ids", "user_id", "userid") ?: 8
+        val teamIdsCol =
+            colOptional("team_ids", "team_id", "teamid")
+                ?: if (userIdsCol != 9) 9 else null
+
+        return ImportColumns(
+            title = col("title", default = 0),
+            username = col("username", "account_username", default = 1),
+            password = col("password", default = 2),
+            category = col("category", default = 3),
+            expiryDate = col("expiry_date", "expiry", default = 4),
+            email = col("email", default = 5),
+            mobileNumber = col("mobile_number", "mobile", default = 6),
+            description = col("description", default = 7),
+            userIds = userIdsCol,
+            teamIds = teamIdsCol
+        )
+    }
+
+    private fun normalizeImportHeader(raw: String): String =
+        raw.trim()
+            .lowercase()
+            .replace(Regex("[^a-z0-9]+"), "_")
+            .trim('_')
+
+    private fun applyImportAssignments(
+        rowIndex: Int,
+        passwordId: Long,
+        userIdsCell: Cell?,
+        teamIdsCell: Cell?,
+        syncUsers: Boolean,
+        syncTeams: Boolean
+    ) {
+        val rowNumber = rowIndex + 1
+        val userIds = if (syncUsers) parseIdListFromCell(userIdsCell) else emptyList()
+        val teamIds = if (syncTeams) parseIdListFromCell(teamIdsCell) else emptyList()
+
+        if (!syncUsers && !syncTeams) {
+            return
+        }
+
+        if (syncUsers) {
+            val userIdsRaw = cellValue(userIdsCell)
+            if (userIdsRaw.isNotBlank() && userIds.isEmpty()) {
+                throw RuntimeException(
+                    "Row $rowNumber: Invalid User IDs '$userIdsRaw'. Use comma-separated numbers (e.g. 1, 2)."
+                )
+            }
+            if (userIds.isNotEmpty()) {
+                val foundUserIds =
+                    userRepository.findAllById(userIds).mapNotNull { it.id }.toSet()
+                val missingUsers = userIds.toSet() - foundUserIds
+                if (missingUsers.isNotEmpty()) {
+                    throw RuntimeException(
+                        "Row $rowNumber: User(s) not found: ${missingUsers.sorted().joinToString(", ")}"
+                    )
+                }
+            }
+            assignmentService.syncAssignments(passwordId, userIds.toSet())
+        }
+
+        if (syncTeams) {
+            val teamIdsRaw = cellValue(teamIdsCell)
+            if (teamIdsRaw.isNotBlank() && teamIds.isEmpty()) {
+                throw RuntimeException(
+                    "Row $rowNumber: Invalid Team IDs '$teamIdsRaw'. Use comma-separated numbers (e.g. 1, 2)."
+                )
+            }
+            teamPasswordAssignmentSyncService.replaceAssignmentsForPassword(
+                passwordId,
+                teamIds.toSet()
+            )
         }
     }
 
@@ -433,6 +571,40 @@ class PasswordEntryService(
                 "Invalid expiry date: $raw"
             )
         }
+    }
+
+    private fun parseIdListFromCell(cell: Cell?): List<Long> {
+        if (cell == null) return emptyList()
+        return when (cell.cellType) {
+            CellType.NUMERIC -> listOfNotNull(parseNumericId(cell.numericCellValue))
+            CellType.STRING -> parseIdList(cell.stringCellValue)
+            CellType.FORMULA ->
+                when (cell.cachedFormulaResultType) {
+                    CellType.NUMERIC -> listOfNotNull(parseNumericId(cell.numericCellValue))
+                    CellType.STRING -> parseIdList(cell.stringCellValue)
+                    else -> parseIdList(cellFormatter.formatCellValue(cell))
+                }
+            else -> parseIdList(cellFormatter.formatCellValue(cell))
+        }
+    }
+
+    private fun parseNumericId(value: Double): Long? {
+        if (value < 0 || value % 1.0 != 0.0) return null
+        return value.toLong()
+    }
+
+    private fun parseIdList(raw: String): List<Long> =
+        raw.split(",", ";")
+            .map { it.trim() }
+            .filter { it.isNotEmpty() }
+            .mapNotNull { parseIdToken(it) }
+
+    private fun parseIdToken(token: String): Long? {
+        token.toLongOrNull()?.let { return it }
+        token.toDoubleOrNull()?.let { value ->
+            return parseNumericId(value)
+        }
+        return null
     }
 
     private fun cellValue(
@@ -494,77 +666,77 @@ class PasswordEntryService(
                 "Username",
                 "Password",
                 "Category",
-                "Expiry",
+                "Expiry Date",
                 "Email",
-                "Mobile Number"
+                "Mobile Number",
+                "Description",
+                "user_id",
+                "team_id",
+                "users",
+                "teams"
             )
 
         val headerRow =
             sheet.createRow(0)
 
-        headers.forEachIndexed {
-                index,
-                title ->
-
-            headerRow
-                .createCell(index)
-                .setCellValue(title)
+        headers.forEachIndexed { index, title ->
+            headerRow.createCell(index).setCellValue(title)
         }
 
         val formatter =
-            DateTimeFormatter
-                .ofPattern(
-                    "yyyy-MM-dd"
-                )
+            DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
-        entries.forEachIndexed {
-                index,
-                entry ->
+        entries.forEachIndexed { index, entry ->
+            val row = sheet.createRow(index + 1)
+            val entryId = entry.id
 
-            val row =
-                sheet.createRow(
-                    index + 1
-                )
+            val userIds =
+                entryId
+                    ?.let { assignmentService.assignedUserIdsForEntry(it).sorted() }
+                    ?: emptyList()
+            val teamIds =
+                entryId
+                    ?.let { findTeamIdsForPassword(it).sorted() }
+                    ?: emptyList()
+            val userLabels =
+                if (userIds.isEmpty()) {
+                    ""
+                } else {
+                    userRepository.findAllById(userIds)
+                        .mapNotNull { user ->
+                            user.username?.let { username ->
+                                user.email?.takeIf { it.isNotBlank() }
+                                    ?.let { email -> "$username ($email)" }
+                                    ?: username
+                            }
+                        }
+                        .sorted()
+                        .joinToString(", ")
+                }
+            val teamLabels =
+                if (teamIds.isEmpty()) {
+                    ""
+                } else {
+                    teamRepository.findAllById(teamIds)
+                        .map { it.name }
+                        .sorted()
+                        .joinToString(", ")
+                }
 
-            row.createCell(0)
-                .setCellValue(
-                    entry.title
-                )
-
-            row.createCell(1)
-                .setCellValue(
-                    entry.username
-                )
-
-            row.createCell(2)
-                .setCellValue(
-                    entry.password
-                )
-
-            row.createCell(3)
-                .setCellValue(
-                    entry.category?.name
-                        ?: ""
-                )
-
-            row.createCell(4)
-                .setCellValue(
-
-                    entry.expiryDate
-                        ?.toLocalDate()
-
-                        ?.format(
-                            formatter
-                        )
-
-                        ?: ""
-                )
-
-            row.createCell(5)
-                .setCellValue(entry.email ?: "")
-
-            row.createCell(6)
-                .setCellValue(entry.mobileNumber ?: "")
+            row.createCell(0).setCellValue(entry.title)
+            row.createCell(1).setCellValue(entry.username)
+            row.createCell(2).setCellValue(entry.password)
+            row.createCell(3).setCellValue(entry.category?.name ?: "")
+            row.createCell(4).setCellValue(
+                entry.expiryDate?.toLocalDate()?.format(formatter) ?: ""
+            )
+            row.createCell(5).setCellValue(entry.email ?: "")
+            row.createCell(6).setCellValue(entry.mobileNumber ?: "")
+            row.createCell(7).setCellValue(entry.description)
+            row.createCell(8).setCellValue(userIds.joinToString(", "))
+            row.createCell(9).setCellValue(teamIds.joinToString(", "))
+            row.createCell(10).setCellValue(userLabels)
+            row.createCell(11).setCellValue(teamLabels)
         }
 
         return ByteArrayOutputStream()

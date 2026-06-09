@@ -35,9 +35,7 @@ class UserPasswordController(
 
         val normalizedCategoryId = categoryId?.takeIf { it != 0L }
 
-        // Fetch from search (paged) then keep only entries assigned to this user.
-        // Note: pagination here is over all matching entries; the visible page may
-        // contain fewer rows than `size` because of the assignment filter.
+
         val pageResult = passwordEntryService.list(
             query,
             normalizedCategoryId,

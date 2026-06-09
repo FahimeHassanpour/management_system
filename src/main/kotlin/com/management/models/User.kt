@@ -39,6 +39,8 @@ data class User(
     @Column(name = "profile_image")
     var profileImage: String? = null,
 
+    @Column(nullable = false)
+    var active: Boolean = true,
 
     @ManyToOne
     @JoinColumn(name = "role_id")

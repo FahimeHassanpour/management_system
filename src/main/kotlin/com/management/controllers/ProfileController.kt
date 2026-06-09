@@ -3,6 +3,7 @@ package com.management.controllers
 import com.management.repositories.UserRepository
 import com.management.services.ProfileService
 import org.springframework.security.core.Authentication
+import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
 import org.springframework.web.bind.annotation.GetMapping
@@ -18,7 +19,8 @@ import java.nio.file.Paths
 @RequestMapping("/profile")
 class ProfileController(
     private val userRepository: UserRepository,
-    private val profileService: ProfileService
+    private val profileService: ProfileService,
+    private val passwordEncoder: PasswordEncoder
 ) {
 
     @GetMapping
@@ -37,8 +39,36 @@ class ProfileController(
         @RequestParam(required = false) newPassword: String?,
         @RequestParam(required = false) confirmPassword: String?,
         redirectAttributes: RedirectAttributes
+
     ): String {
         var fileName: String? = null
+
+        val user = userRepository
+            .findByUsername(authentication.name)
+            .orElseThrow()
+
+        if (!newPassword.isNullOrBlank()) {
+
+            if (!passwordEncoder.matches(
+                    currentPassword,
+                    user.password
+                )
+            ) {
+                return "redirect:/profile?error=currentPassword"
+            }
+
+            if (newPassword != confirmPassword) {
+                return "redirect:/profile?error=passwordMismatch"
+            }
+
+            if (passwordEncoder.matches(
+                    newPassword,
+                    user.password
+                )
+            ) {
+                return "redirect:/profile?error=samePassword"
+            }
+        }
 
         if (profileImage != null && !profileImage.isEmpty) {
             fileName = System.currentTimeMillis().toString() +

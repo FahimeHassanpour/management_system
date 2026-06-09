@@ -1,16 +1,7 @@
 package com.management.services
 
 import com.management.dto.AuditLogEntry
-import org.openpdf.text.Document
-import org.openpdf.text.Element
-import org.openpdf.text.Font
-import org.openpdf.text.FontFactory
-import org.openpdf.text.PageSize
-import org.openpdf.text.Paragraph
-import org.openpdf.text.Phrase
-import org.openpdf.text.pdf.PdfPCell
-import org.openpdf.text.pdf.PdfPTable
-import org.openpdf.text.pdf.PdfWriter
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Page
 import org.springframework.data.domain.PageImpl
@@ -19,7 +10,6 @@ import org.springframework.data.domain.Pageable
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
-import java.awt.Color
 import java.io.ByteArrayOutputStream
 import java.sql.Timestamp
 import java.time.LocalDateTime
@@ -131,56 +121,34 @@ class AuditLogService(private val jdbcTemplate: JdbcTemplate) {
         return jdbcTemplate.update("DELETE FROM revinfo")
     }
 
-    fun renderPdf(entries: List<AuditLogEntry>): ByteArray {
-        val out = ByteArrayOutputStream()
-        val doc = Document(PageSize.A4.rotate(), 36f, 36f, 48f, 36f)
-        PdfWriter.getInstance(doc, out)
-        doc.open()
-
-        val titleFont: Font = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 16f, Color(33, 37, 41))
-        val subtitleFont: Font = FontFactory.getFont(FontFactory.HELVETICA, 10f, Color(73, 80, 87))
-        val headerFont: Font = FontFactory.getFont(FontFactory.HELVETICA_BOLD, 10f, Color.WHITE)
-        val cellFont: Font = FontFactory.getFont(FontFactory.HELVETICA, 9f, Color(33, 37, 41))
-
-        doc.add(Paragraph("Audit log report", titleFont))
-        val now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-        doc.add(Paragraph("Generated: $now — ${entries.size} entr${if (entries.size == 1) "y" else "ies"}", subtitleFont))
-        doc.add(Paragraph(" "))
-
-        val table = PdfPTable(floatArrayOf(1f, 3f, 2f, 2f, 1.5f, 1f, 5f))
-        table.widthPercentage = 100f
-        table.headerRows = 1
-
-        val headers = arrayOf("Rev", "When", "Who", "Entity", "Action", "ID", "Summary")
-        for (h in headers) {
-            val cell = PdfPCell(Phrase(h, headerFont))
-            cell.backgroundColor = Color(52, 58, 64)
-            cell.horizontalAlignment = Element.ALIGN_LEFT
-            cell.setPadding(6f)
-            table.addCell(cell)
+    fun renderExcel(entries: List<AuditLogEntry>): ByteArray {
+        val workbook = XSSFWorkbook()
+        val sheet = workbook.createSheet("Audit Log")
+        val headers = listOf("Rev", "When", "Who", "Entity", "Action", "ID", "Summary")
+        val headerRow = sheet.createRow(0)
+        headers.forEachIndexed { index, title ->
+            headerRow.createCell(index).setCellValue(title)
         }
 
         val rowFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-        for (entry in entries) {
-            table.addCell(textCell(entry.rev.toString(), cellFont))
-            table.addCell(textCell(entry.changedAt.format(rowFormatter), cellFont))
-            table.addCell(textCell(entry.performedBy ?: "-", cellFont))
-            table.addCell(textCell(entry.entityType, cellFont))
-            table.addCell(textCell(entry.action, cellFont))
-            table.addCell(textCell(entry.entityId?.toString() ?: "-", cellFont))
-            table.addCell(textCell(entry.summary ?: "-", cellFont))
+        entries.forEachIndexed { index, entry ->
+            val row = sheet.createRow(index + 1)
+            row.createCell(0).setCellValue(entry.rev.toDouble())
+            row.createCell(1).setCellValue(entry.changedAt.format(rowFormatter))
+            row.createCell(2).setCellValue(entry.performedBy ?: "-")
+            row.createCell(3).setCellValue(entry.entityType)
+            row.createCell(4).setCellValue(entry.action)
+            row.createCell(5).setCellValue(entry.entityId?.toString() ?: "-")
+            row.createCell(6).setCellValue(entry.summary ?: "-")
         }
 
-        doc.add(table)
-        doc.close()
-        return out.toByteArray()
-    }
+        headers.indices.forEach { sheet.autoSizeColumn(it) }
 
-    private fun textCell(text: String, font: Font): PdfPCell {
-        val cell = PdfPCell(Phrase(text, font))
-        cell.setPadding(5f)
-        cell.horizontalAlignment = Element.ALIGN_LEFT
-        return cell
+        return ByteArrayOutputStream().use { output ->
+            workbook.write(output)
+            workbook.close()
+            output.toByteArray()
+        }
     }
 
     private fun availableConfigs(): List<TableConfig> {

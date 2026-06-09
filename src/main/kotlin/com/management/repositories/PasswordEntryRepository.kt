@@ -32,4 +32,9 @@ interface PasswordEntryRepository : JpaRepository<PasswordEntry, Long> {
         title: String,
         username: String
     ): Boolean
+
+    fun findByTitleAndUsername(
+        title: String,
+        username: String
+    ): PasswordEntry?
 }

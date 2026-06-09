@@ -11,6 +11,10 @@
             <p class="subtitle" th:text="#{login.subtitle}">Use your company account credentials</p>
         </div>
 
+        <div th:if="${param.disabled}" class="alert alert-error">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span th:text="#{login.error.deactivated}">Your account has been deactivated.</span>
+        </div>
         <div th:if="${param.error}" class="alert alert-error">
             <i class="fa-solid fa-triangle-exclamation"></i>
             <span th:text="#{login.error.invalid}">Invalid username or password.</span>
