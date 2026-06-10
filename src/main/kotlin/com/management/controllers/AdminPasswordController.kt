@@ -78,7 +78,6 @@ class AdminPasswordController(
     @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     fun editForm(
         @PathVariable id: Long,
-        @RequestParam(required = false) success: Boolean?,
         model: Model
     ): String {
         val entry: PasswordEntry = passwordEntryService.getById(id)
@@ -106,15 +105,7 @@ class AdminPasswordController(
         model.addAttribute("selectedUserIds", selectedUserIds)
         model.addAttribute("selectedTeamIds", selectedTeamIds)
         model.addAttribute("isEdit", true)
-        model.addAttribute("teams", teamRepository.findAll()
-        )
-        if (success == true) {
-            model.addAttribute(
-                "successMessage",
-                "Password updated successfully."
-            )
-        }
-
+        model.addAttribute("teams", teamRepository.findAll())
 
         return "admin/password-form"
 
@@ -125,11 +116,16 @@ class AdminPasswordController(
     @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     fun create(
         @ModelAttribute entryRequest: PasswordEntryRequest,
-        model: Model
+        model: Model,
+        redirectAttributes: RedirectAttributes
     ): String {
         return try {
             val savedEntry = passwordEntryService.create(entryRequest)
             assignmentService.syncAssignments(savedEntry.id!!, entryRequest.userIds.toSet())
+            redirectAttributes.addFlashAttribute(
+                "successMessage",
+                "Password entry created successfully."
+            )
             "redirect:/admin/passwords"
         } catch (ex: DuplicatePasswordEntryException) {
             populatePasswordFormModel(model, entryRequest, isEdit = false)
@@ -151,9 +147,9 @@ class AdminPasswordController(
             assignmentService.syncAssignments(id, entryRequest.userIds.toSet())
             redirectAttributes.addFlashAttribute(
                 "successMessage",
-                "Password updated successfully and users notified"
+                "Password updated successfully."
             )
-            "redirect:/admin/passwords/$id/edit?success=true"
+            "redirect:/admin/passwords/$id/edit"
         } catch (ex: DuplicatePasswordEntryException) {
             populatePasswordFormModel(
                 model,

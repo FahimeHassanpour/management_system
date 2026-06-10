@@ -3,7 +3,6 @@ package com.management.services
 import com.management.dto.PasswordEntryRequest
 import com.management.models.Category
 import com.management.models.PasswordEntry
-import com.management.repositories.AssignmentRepository
 import com.management.repositories.CategoryRepository
 import com.management.repositories.PasswordEntryRepository
 import com.management.repositories.TeamPasswordAssignmentRepository
@@ -36,11 +35,6 @@ class PasswordEntryService(
     private val categoryRepository:
     CategoryRepository,
 
-    private val assignmentRepository:
-    AssignmentRepository,
-
-    private val emailService:
-    EmailService,
     private val teamPasswordAssignmentRepository:
     TeamPasswordAssignmentRepository,
 
@@ -62,8 +56,13 @@ class PasswordEntryService(
         username: String,
         excludeId: Long? = null
     ) {
-        val duplicate = passwordEntryRepository.findByTitleAndUsername(title, username)
-        if (duplicate != null && duplicate.id != excludeId) {
+        val duplicateExists =
+            if (excludeId != null) {
+                passwordEntryRepository.existsByTitleAndUsernameAndIdNot(title, username, excludeId)
+            } else {
+                passwordEntryRepository.existsByTitleAndUsername(title, username)
+            }
+        if (duplicateExists) {
             throw DuplicatePasswordEntryException()
         }
     }
@@ -217,25 +216,6 @@ class PasswordEntryService(
             passwordEntryRepository
                 .save(existing)
 
-        val assignments =
-            assignmentRepository
-                .findByPasswordEntry(saved)
-
-        val users =
-            assignments
-                .mapNotNull {
-                    it.user
-                }
-
-        users.forEach { user ->
-
-            emailService
-                .sendPasswordUpdatedEmail(
-                    user.email,
-                    saved.title
-                )
-        }
-
         teamPasswordAssignmentSyncService.replaceAssignmentsForPassword(
             saved.id!!,
             request.teamIds.toSet()
@@ -334,7 +314,7 @@ class PasswordEntryService(
                 val trimmedTitle = title.trim()
                 val trimmedUsername = username.trim()
                 val existingEntry =
-                    passwordEntryRepository.findByTitleAndUsername(
+                    passwordEntryRepository.findFirstByTitleAndUsernameOrderByIdAsc(
                         trimmedTitle,
                         trimmedUsername
                     )

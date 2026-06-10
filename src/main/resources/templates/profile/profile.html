@@ -8,10 +8,10 @@
 
 <div class="dashboard-container">
 
-    <div th:if="${successMessage}" class="alert alert-success">
+    <div th:if="${successMessage}" class="alert alert-success" style="margin-bottom: var(--wa-space-m);">
         <span th:text="${successMessage}"></span>
     </div>
-    <div th:if="${errorMessage}" class="alert alert-danger">
+    <div th:if="${errorMessage}" class="alert alert-danger" style="margin-bottom: var(--wa-space-m);">
         <span th:text="${errorMessage}"></span>
     </div>
 

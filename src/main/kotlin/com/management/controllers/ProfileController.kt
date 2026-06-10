@@ -24,8 +24,22 @@ class ProfileController(
 ) {
 
     @GetMapping
-    fun profile(authentication: Authentication, model: Model): String {
+    fun profile(
+        authentication: Authentication,
+        model: Model,
+        @RequestParam(required = false) error: String?
+    ): String {
         populateProfileModel(authentication, model)
+        if (!model.containsAttribute("errorMessage")) {
+            when (error) {
+                "currentPassword" ->
+                    model.addAttribute("errorMessage", "Current password is incorrect.")
+                "passwordMismatch" ->
+                    model.addAttribute("errorMessage", "New password and confirmation do not match.")
+                "samePassword" ->
+                    model.addAttribute("errorMessage", "New password must be different from current password.")
+            }
+        }
         return "profile/profile"
     }
 
@@ -48,25 +62,36 @@ class ProfileController(
             .orElseThrow()
 
         if (!newPassword.isNullOrBlank()) {
-
-            if (!passwordEncoder.matches(
-                    currentPassword,
-                    user.password
+            if (currentPassword.isNullOrBlank()) {
+                redirectAttributes.addFlashAttribute(
+                    "errorMessage",
+                    "Current password is required to change your password."
                 )
-            ) {
-                return "redirect:/profile?error=currentPassword"
+                return "redirect:/profile"
+            }
+
+            if (!passwordEncoder.matches(currentPassword, user.password)) {
+                redirectAttributes.addFlashAttribute(
+                    "errorMessage",
+                    "Current password is incorrect."
+                )
+                return "redirect:/profile"
             }
 
             if (newPassword != confirmPassword) {
-                return "redirect:/profile?error=passwordMismatch"
+                redirectAttributes.addFlashAttribute(
+                    "errorMessage",
+                    "New password and confirmation do not match."
+                )
+                return "redirect:/profile"
             }
 
-            if (passwordEncoder.matches(
-                    newPassword,
-                    user.password
+            if (passwordEncoder.matches(newPassword, user.password)) {
+                redirectAttributes.addFlashAttribute(
+                    "errorMessage",
+                    "New password must be different from current password."
                 )
-            ) {
-                return "redirect:/profile?error=samePassword"
+                return "redirect:/profile"
             }
         }
 

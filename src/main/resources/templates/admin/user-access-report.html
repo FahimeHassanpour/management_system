@@ -2,80 +2,134 @@
 <html xmlns:th="http://www.thymeleaf.org"
       class="wa-theme-awesome wa-palette-bright wa-brand-blue">
 
-<head th:replace="~{fragments/head :: commonHead('User Access Report')}"></head>
+<head th:replace="~{fragments/head :: commonHead('Reports')}"></head>
 
+<body class="dashboard-body">
 <div class="dashboard-container">
 
     <header class="page-header">
-        <h1>Report</h1>
-        <p>Select a user or a team to see all password entries they can access.</p>
+        <h1>Reports</h1>
+        <p>See which password entries a user can access, or which passwords are assigned to a team.</p>
     </header>
 
-    <section class="card report-card">
-        <form method="post" th:action="@{/admin/reports/user-access}">
-            <div class="report-toolbar">
-                <div class="select-dropdown-wrap">
-                    <select class="toolbar-input" name="userId" required>
-                        <option value="" th:selected="${selectedUser == null}">Select User</option>
-                        <option
-                            th:each="user : ${users}"
-                            th:value="${user.id}"
-                            th:text="${user.username}"
-                            th:selected="${selectedUser != null and user.id == selectedUser.id}">
-                        </option>
-                    </select>
-                    <span class="user-dropdown-chevron" aria-hidden="true">▾</span>
-                </div>
+    <div th:if="${errorMessage}" class="alert alert-danger">
+        <span th:text="${errorMessage}"></span>
+    </div>
 
-                <button type="submit" class="btn-primary">
-                    Generate Report
-                </button>
+    <div class="report-query-grid">
+        <section class="card report-query-card">
+            <div class="report-query-card-header">
+                <h2>
+                    <i class="fa-solid fa-user" aria-hidden="true"></i>
+                    User access
+                </h2>
+                <p>Direct assignments plus passwords shared via the user&apos;s teams.</p>
             </div>
-
-            <div th:if="${selectedUser != null}" class="report-summary">
-                <div style="display:flex; align-items:center; justify-content:space-between; gap: var(--wa-space-s); flex-wrap: wrap;">
-                    <h2 style="margin:0;">
-                        User:
-                        <span th:text="${selectedUser.username}"></span>
-                    </h2>
-
-                    <div class="summary-card">
-                        <span class="summary-value"
-                              th:text="${passwords != null ? #lists.size(passwords) : 0}">0</span>
-                        <span class="summary-label">entries</span>
+            <form class="report-query-form"
+                  method="post"
+                  th:action="@{/admin/reports/user-access}">
+                <input type="hidden" name="scope" value="user" />
+                <div class="field">
+                    <label for="userId">User</label>
+                    <div class="select-dropdown-wrap">
+                        <select id="userId" class="toolbar-input" name="userId" required>
+                            <option value="" th:selected="${reportScope != 'user'}">Select user</option>
+                            <option th:each="user : ${users}"
+                                    th:value="${user.id}"
+                                    th:text="${user.username}"
+                                    th:selected="${reportScope == 'user' and selectedUser != null and user.id == selectedUser.id}">
+                            </option>
+                        </select>
+                        <span class="user-dropdown-chevron" aria-hidden="true">▾</span>
                     </div>
                 </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fa-solid fa-chart-column" aria-hidden="true"></i>
+                    Generate user report
+                </button>
+            </form>
+        </section>
+
+        <section class="card report-query-card">
+            <div class="report-query-card-header">
+                <h2>
+                    <i class="fa-solid fa-people-group" aria-hidden="true"></i>
+                    Team assignment
+                </h2>
+                <p>Passwords explicitly assigned to the selected team.</p>
             </div>
-        </form>
+            <form class="report-query-form"
+                  method="post"
+                  th:action="@{/admin/reports/user-access}">
+                <input type="hidden" name="scope" value="team" />
+                <div class="field">
+                    <label for="teamId">Team</label>
+                    <div class="select-dropdown-wrap">
+                        <select id="teamId" class="toolbar-input" name="teamId" required>
+                            <option value="" th:selected="${reportScope != 'team'}">Select team</option>
+                            <option th:each="team : ${teams}"
+                                    th:value="${team.id}"
+                                    th:text="${team.name}"
+                                    th:selected="${reportScope == 'team' and selectedTeam != null and team.id == selectedTeam.id}">
+                            </option>
+                        </select>
+                        <span class="user-dropdown-chevron" aria-hidden="true">▾</span>
+                    </div>
+                </div>
+                <button type="submit" class="btn-primary">
+                    <i class="fa-solid fa-chart-column" aria-hidden="true"></i>
+                    Generate team report
+                </button>
+            </form>
+        </section>
+    </div>
 
-        <div th:if="${selectedUser != null}" style="margin-top: var(--wa-space-s);">
-            <div th:if="${passwords == null or #lists.isEmpty(passwords)}" class="alert" style="margin: 0;">
-                No passwords found for this user.
+    <section class="card report-results-card" th:if="${reportScope != null}">
+        <div class="report-results-heading">
+            <div>
+                <h2 th:if="${reportScope == 'user' and selectedUser != null}">
+                    User report
+                    <span class="report-subtitle"
+                          th:text="'Access for ' + ${selectedUser.username}"></span>
+                </h2>
+                <h2 th:if="${reportScope == 'team' and selectedTeam != null}">
+                    Team report
+                    <span class="report-subtitle"
+                          th:text="'Assigned to ' + ${selectedTeam.name}"></span>
+                </h2>
             </div>
-
-            <div th:if="${passwords != null and !#lists.isEmpty(passwords)}" class="table-wrap table-wrap-scroll">
-                <table class="data-table">
-                    <thead>
-                    <tr>
-                        <th>Title</th>
-                        <th>Username</th>
-                        <th>Category</th>
-                    </tr>
-                    </thead>
-
-                    <tbody>
-                    <tr th:each="password : ${passwords}">
-                        <td th:text="${password.title}"></td>
-                        <td th:text="${password.username}"></td>
-                        <td th:text="${password.category?.name != null ? password.category.name : '—'}"></td>
-                    </tr>
-                    </tbody>
-                </table>
+            <div class="report-summary-card">
+                <span class="summary-value"
+                      th:text="${passwords != null ? #lists.size(passwords) : 0}">0</span>
+                <span class="summary-label">entries</span>
             </div>
         </div>
 
+        <div th:if="${passwords == null or #lists.isEmpty(passwords)}" class="report-empty-state">
+            <span th:if="${reportScope == 'user'}">No passwords found for this user.</span>
+            <span th:if="${reportScope == 'team'}">No passwords assigned to this team.</span>
+        </div>
+
+        <div th:if="${passwords != null and !#lists.isEmpty(passwords)}" class="table-wrap table-wrap-scroll">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Username</th>
+                    <th>Category</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="password : ${passwords}">
+                    <td th:text="${password.title}"></td>
+                    <td th:text="${password.username}"></td>
+                    <td th:text="${password.category?.name != null ? password.category.name : '—'}"></td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
     </section>
 
 </div>
-
+</body>
 </html>

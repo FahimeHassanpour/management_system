@@ -20,20 +20,19 @@
               class="entry-form user-edit-form">
 
             <div class="form-grid">
-
                 <div class="field">
                     <label for="username">Username</label>
                     <input id="username" type="text" name="username" th:value="${user.username}" required />
                 </div>
 
                 <div class="field">
-                    <label for="email">Email</label>
-                    <input id="email" type="email" name="email" th:value="${user.email}" required />
+                    <label for="fullName">Full Name</label>
+                    <input id="fullName" type="text" name="fullName" th:value="${user.fullName}" required />
                 </div>
 
                 <div class="field">
-                    <label for="fullName">Full Name</label>
-                    <input id="fullName" type="text" name="fullName" th:value="${user.fullName}" required />
+                    <label for="email">Email</label>
+                    <input id="email" type="email" name="email" th:value="${user.email}" required />
                 </div>
 
                 <div class="field">
@@ -49,7 +48,6 @@
                         <span class="user-dropdown-chevron" aria-hidden="true">▾</span>
                     </div>
                 </div>
-
             </div>
 
             <div class="field user-edit-teams-field">

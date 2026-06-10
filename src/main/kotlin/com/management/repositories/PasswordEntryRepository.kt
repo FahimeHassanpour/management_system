@@ -33,8 +33,15 @@ interface PasswordEntryRepository : JpaRepository<PasswordEntry, Long> {
         username: String
     ): Boolean
 
-    fun findByTitleAndUsername(
+    fun existsByTitleAndUsernameAndIdNot(
+        title: String,
+        username: String,
+        id: Long
+    ): Boolean
+
+    fun findFirstByTitleAndUsernameOrderByIdAsc(
         title: String,
         username: String
     ): PasswordEntry?
+
 }
